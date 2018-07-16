@@ -1,0 +1,24 @@
+{
+    // "exposed": true,
+    // "authentication": [{
+    //     "method": "Form"
+    // }],
+    // "authorization": ["Covarius_Int.API.ODATA::Execute"],
+    // "mime_mapping": [{
+    //     "extension": "jpg",
+    //     "mimetype": "image/jpeg"
+    // }],
+    // "force_ssl": false,
+    // "enable_etags": true,
+    // "prevent_xsrf": false,
+    // "anonymous_connection": null,
+    // "cors": [{
+    //     "enabled": false
+    // }],
+    // "cache_control": "no-cache, no-store",
+    // "default_file": "index.html"
+    "exposed": true,
+    "authentication": [{
+        "method": "Form"
+    }]
+}

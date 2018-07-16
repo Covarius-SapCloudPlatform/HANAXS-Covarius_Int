@@ -1,0 +1,26 @@
+{ 
+    "exposed" : true,
+    "authentication" :
+          [
+                { "method" : "Form" }
+          ], 
+    "prevent_xsrf" : true,
+    "force_ssl" : true,
+    "rewrite_rules":[{
+           "source": "/API/Logging/IntegrationLogger/(.*)",
+           "target": "/API/Logging/IntegrationLogger.xsjs/$1"
+    },
+    {
+           "source": "/API/Logging/GETIntegrationLog/(.*)",
+           "target": "/API/Logging/GETIntegrationLog.xsjs/$1"
+    },
+    {
+           "source": "/API/Logging/UpdateIntegrationLogStatus/(.*)",
+           "target": "/API/Logging/UpdateIntegrationLogStatus.xsjs/$1"
+    },
+        {
+           "source": "/API/Logging/LoggingAnalytics/(.*)",
+           "target": "/API/Logging/LoggingAnalytics.xsodata/$1"
+    }],
+    "cache_control" : "private, no-cache, no-store, must-revalidate"
+}

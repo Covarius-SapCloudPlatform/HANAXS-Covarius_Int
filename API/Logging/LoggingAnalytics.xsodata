@@ -1,0 +1,8 @@
+service {
+"Covarius_Int.Database/LOGGING_CALC_VIEW.calculationview" as "LoggingOData" keys ("STATUS", "METHOD")
+aggregates always;        
+}
+
+annotations {
+  enable OData4SAP;
+}

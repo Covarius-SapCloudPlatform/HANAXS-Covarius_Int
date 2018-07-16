@@ -1,0 +1,7 @@
+{
+    "description": "Update Integration Log Data with current Status",
+    "action": "Covarius_Int.JOBS:UpdateIntegrationLogStatus.xsjs::execute",
+    "schedules": [
+
+    ]
+}
