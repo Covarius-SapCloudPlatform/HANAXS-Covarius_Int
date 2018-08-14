@@ -7,20 +7,40 @@
     "prevent_xsrf" : true,
     "force_ssl" : true,
     "rewrite_rules":[{
-           "source": "/API/Logging/IntegrationLogger/(.*)",
-           "target": "/API/Logging/IntegrationLogger.xsjs/$1"
+           "source": "/CDL_PKG_API/CDL_API_POST_INTEGRATION_LOG/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_POST_INTEGRATION_LOG.xsjs/$1"
     },
     {
-           "source": "/API/Logging/GETIntegrationLog/(.*)",
-           "target": "/API/Logging/GETIntegrationLog.xsjs/$1"
+           "source": "/CDL_PKG_API/CDL_API_GET_INTEGRATION_LOG/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_INTEGRATION_LOG.xsjs/$1"
     },
     {
-           "source": "/API/Logging/UpdateIntegrationLogStatus/(.*)",
-           "target": "/API/Logging/UpdateIntegrationLogStatus.xsjs/$1"
+           "source": "/CDL_PKG_API/CDL_API_GET_UPDATE_INT_STATUS_HCI/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_UPDATE_INT_STATUS_HCI.xsjs/$1"
     },
         {
-           "source": "/API/Logging/LoggingAnalytics/(.*)",
-           "target": "/API/Logging/LoggingAnalytics.xsodata/$1"
+           "source": "/CDL_PKG_API/CDL_API_LOG_ANALYSIS/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_LOG_ANALYSIS.xsodata/$1"
+    },
+        {
+           "source": "/CDL_PKG_API/CDL_API_POST_INT_STATUS_UPDATE/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_POST_INT_STATUS_UPDATE.xsjs/$1"
+    },
+     {
+           "source": "/CDL_PKG_API/CDL_API_POST_GL_MASTER/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_POST_GL_MASTER.xsjs/$1"
+    },
+         {
+           "source": "/CDL_PKG_API/CDL_API_POST_GL_ROUTING/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_POST_GL_ROUTING.xsjs/$1"
+    },
+         {
+           "source": "/CDL_PKG_API/CDL_API_GET_GL_ROUTING/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_GL_ROUTING.xsjs/$1"
+    },
+    {
+           "source": "/CDL_PKG_API/CDL_API_GET_GL_HEADER/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_GL_HEADER.xsjs/$1"
     }],
     "cache_control" : "private, no-cache, no-store, must-revalidate"
 }

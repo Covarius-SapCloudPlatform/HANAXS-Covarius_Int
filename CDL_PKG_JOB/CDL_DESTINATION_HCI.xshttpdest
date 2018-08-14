@@ -1,0 +1,8 @@
+description = "HCI Tenant";
+host = "p2011-tmn.hci.eu1.hana.ondemand.com";
+port = 443;
+pathPrefix = "/api/v1/MessageProcessingLogs";
+authType = basic;
+useSSL = true;
+timeout = 0;
+sslAuth = anonymous;

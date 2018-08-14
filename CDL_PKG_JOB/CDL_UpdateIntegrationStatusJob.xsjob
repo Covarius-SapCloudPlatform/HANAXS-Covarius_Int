@@ -1,0 +1,7 @@
+{
+    "description": "Update Covarius Data Lake Pulse Log Master with current Status",
+    "action": "CDL_PKG_LOGGING.CDL_PKG_JOB:CDL_JOB_UPDATE_INT_STATUS_HCI.xsjs::execute",
+    "schedules": [
+
+    ]
+}
