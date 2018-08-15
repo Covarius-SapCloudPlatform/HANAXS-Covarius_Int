@@ -7,8 +7,9 @@
 	// Date: 2018-08-14                                         //
 	// Description: REST service to be able to read entries     //
 	// from the GL Header Table.  Allowing filters              //
-	// on the sapDocument, fiscalYear, companyCode and          //
-	// postingDate fields to be passed in as optional paramters.//
+	// on the sapDocument, fiscalYear, companyCode, postingDate //
+	// and referenceDocument fields to be passed in as          //
+	// optional paramters.                                      //
 	//----------------------------------------------------------//
 
 	// -------------------------------------------------------- // 
@@ -21,6 +22,7 @@
 	var gvFiscalYear = $.request.parameters.get('fiscalYear');
 	var gvCompanyCode = $.request.parameters.get('companyCode');
 	var gvPostingDate = $.request.parameters.get('postingDate');
+	var gvReferenceDocument = $.request.parameters.get('referenceDocument');
 	var gvErrorMessage;
 
 	// -------------------------------------------------------- // 
@@ -44,7 +46,7 @@
 			//Variable to keep query statement 
 			var lvQuery;
 
-			if (!gvSapDocument && !gvFiscalYear && !gvCompanyCode && !gvPostingDate) {
+			if (!gvSapDocument && !gvFiscalYear && !gvCompanyCode && !gvPostingDate && !gvReferenceDocument) {
 				lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTableName + '"';
 			} else {
 				lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTableName + '"';
@@ -82,6 +84,17 @@
 						}
 					} else {
 						lvQuery = lvQuery + ' WHERE POSTING_DATE = ' + "'" + gvPostingDate + "'";
+					}
+				}
+				if (gvReferenceDocument) {
+					if (lvQuery) {
+						if (lvQuery.indexOf('WHERE') === -1) {
+							lvQuery = lvQuery + ' WHERE REFERENCE_DOCUMENT = ' + "'" + gvReferenceDocument + "'";
+						} else {
+							lvQuery = lvQuery + ' AND REFERENCE_DOCUMENT = ' + "'" + gvReferenceDocument + "'";
+						}
+					} else {
+						lvQuery = lvQuery + ' WHERE REFERENCE_DOCUMENT = ' + "'" + gvReferenceDocument + "'";
 					}
 				}
 			}

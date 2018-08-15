@@ -41,6 +41,10 @@
     {
            "source": "/CDL_PKG_API/CDL_API_GET_GL_HEADER/(.*)",
            "target": "/CDL_PKG_API/CDL_API_GET_GL_HEADER.xsjs/$1"
+    },
+     {
+           "source": "/CDL_PKG_API/CDL_API_GET_LATEST_POSTING_STATS/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_LATEST_POSTING_STATS.xsjs/$1"
     }],
     "cache_control" : "private, no-cache, no-store, must-revalidate"
 }
