@@ -17,13 +17,49 @@
 	// -------------------------------------------------------- //
 	//Variables declaring the table details
 	var gvSchemaName = 'CDL_SCH_LOGGING';
-	var gvTableName = 'CDL_GL_HEADER';
+	var gvHeaderTable = 'CDL_GL_HEADER';
+	var gvItemTable = 'CDL_GL_ITEM';
+
 	var gvSapDocument = $.request.parameters.get('sapDocument');
 	var gvFiscalYear = $.request.parameters.get('fiscalYear');
-	var gvCompanyCode = $.request.parameters.get('companyCode');
-	var gvPostingDate = $.request.parameters.get('postingDate');
+	var gvCompanyCode = $.request.parameters.get('companyCode'),
+		gvCompanyCodes;
+	var gvPostingDate = $.request.parameters.get('postingDate'),
+		gvPostingDates;
 	var gvReferenceDocument = $.request.parameters.get('referenceDocument');
+	var gvGlAccount = $.request.parameters.get('glAccount'),
+		gvGlAccounts;
+	var gvPostingStatus = $.request.parameters.get('postingStatus'),
+		gvPostingStatuses;
 	var gvErrorMessage;
+
+	//Check if there are multiple Posting Date Restrictions
+	if (gvPostingDate) {
+		if (gvPostingDate.indexOf(',') !== -1) {
+			gvPostingDates = gvPostingDate.split(',');
+		}
+	}
+
+	//Check if there are multiple Company Code Restrictions
+	if (gvCompanyCode) {
+		if (gvCompanyCode.indexOf(',') !== -1) {
+			gvCompanyCodes = gvCompanyCode.split(',');
+		}
+	}
+
+	//Check if there are multiple GL Account Restrictions
+	if (gvGlAccount) {
+		if (gvGlAccount.indexOf(',') !== -1) {
+			gvGlAccounts = gvGlAccount.split(',');
+		}
+	}
+
+	//Check if there are multiple Posting Status Restrictions
+	if (gvPostingStatus) {
+		if (gvPostingStatus.indexOf(',') !== -1) {
+			gvPostingStatuses = gvPostingStatus.split(',');
+		}
+	}
 
 	// -------------------------------------------------------- // 
 	// Component Declarations                                   //
@@ -42,59 +78,159 @@
 	// Function to read entries from the table 				    //
 	// -------------------------------------------------------- //
 	function _getEntries() {
+		var status,
+			lvSapDocument,
+			lvCompanyCode,
+			lvFiscalYear;
+
 		try {
 			//Variable to keep query statement 
-			var lvQuery;
+			var lvQuery =
+				'SELECT J1."SAP_DOCUMENT", J1."FISCAL_YEAR", J1."COMPANY_CODE", J1."MESSAGE_GUID", J1."REFERENCE_KEY", J1."BUSINESS_TRANSACTION", J1."HEADERTEXT", J1."DOCUMENT_DATE",';
+			lvQuery = lvQuery +
+				'J1."POSTING_DATE", J1."TRANSLATION_DATE", J1."FISCAL_PERIOD", J1."DOCUMENT_TYPE", J1."REFERENCE_DOCUMENT", J1."REFERENCE_DOC_NO_LONG", J1."ACCOUNTING_PRINCIPLE",';
+			lvQuery = lvQuery +
+				'J1."BILLING_CATEGORY", J1."STATUS_CODE", J1."STATUS_MESSAGE", J1."DOCUMENT_STATUS", J1."DOCUMENT_STATUS_DESCRIPTION", J1."POST_INDICATOR", J1."ACCOUNT_TYPE", ';
+			lvQuery = lvQuery +
+				'J1."ENTRY_DATE", J1."UPDATE_GUID", J1."DOCUMENT_STATUS_DESCRIPTION", J1."POST_INDICATOR", J1."ACCOUNT_TYPE", J1."ENTRY_DATE", J1."UPDATE_GUID"';
+			lvQuery = lvQuery + 'FROM "' + gvSchemaName + '"."' + gvHeaderTable + '" as J1 ';
 
-			if (!gvSapDocument && !gvFiscalYear && !gvCompanyCode && !gvPostingDate && !gvReferenceDocument) {
-				lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTableName + '"';
-			} else {
-				lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTableName + '"';
-				if (gvSapDocument) {
-					lvQuery = lvQuery + ' WHERE SAP_DOCUMENT = ' + "'" + gvSapDocument + "'";
+			//Check if GL Account is used as restriction, then add the join
+			if (gvGlAccount) {
+				lvQuery = lvQuery + 'FULL OUTER JOIN "' + gvSchemaName + '"."' + gvItemTable + '" as J2 ';
+				lvQuery = lvQuery + 'ON J1."SAP_DOCUMENT" = J2."SAP_DOCUMENT" ';
+				lvQuery = lvQuery + 'AND J1."FISCAL_YEAR" = J2."FISCAL_YEAR" ';
+				lvQuery = lvQuery + 'AND J1."COMPANY_CODE" = J2."COMPANY_CODE" ';
+			}
+
+			//GL Account Restriction
+			if (!gvGlAccounts && gvGlAccount) {
+				if (lvQuery.indexOf('WHERE') === -1) {
+					lvQuery = lvQuery + ' WHERE J2."GL_ACCOUNT" = ' + "'" + gvGlAccount + "'";
+				} else {
+					lvQuery = lvQuery + ' AND J2."GL_ACCOUNT" = ' + "'" + gvGlAccount + "'";
 				}
-				if (gvFiscalYear) {
-					if (lvQuery) {
-						if (lvQuery.indexOf('WHERE') === -1) {
-							lvQuery = lvQuery + ' WHERE FISCAL_YEAR = ' + "'" + gvFiscalYear + "'";
+			} else if (gvGlAccounts) {
+				for (var j = 0; j <= gvGlAccounts.length; j++) {
+					if (gvGlAccounts[j]) {
+						if (j === 0) {
+							if (lvQuery.indexOf('WHERE') === -1) {
+								lvQuery = lvQuery + ' WHERE ( J2."GL_ACCOUNT" = ' + "'" + gvGlAccounts[j] + "'";
+							} else {
+								lvQuery = lvQuery + ' AND ( J2."GL_ACCOUNT" = ' + "'" + gvGlAccounts[j] + "'";
+							}
+
 						} else {
-							lvQuery = lvQuery + ' AND FISCAL_YEAR = ' + "'" + gvFiscalYear + "'";
+							lvQuery = lvQuery + ' OR J2."GL_ACCOUNT" = ' + "'" + gvGlAccounts[j] + "' )";
 						}
-					} else {
-						lvQuery = lvQuery + ' WHERE FISCAL_YEAR = ' + "'" + gvFiscalYear + "'";
 					}
 				}
-				if (gvCompanyCode) {
-					if (lvQuery) {
-						if (lvQuery.indexOf('WHERE') === -1) {
-							lvQuery = lvQuery + ' WHERE COMPANY_CODE = ' + "'" + gvCompanyCode + "'";
-						} else {
-							lvQuery = lvQuery + ' AND COMPANY_CODE = ' + "'" + gvCompanyCode + "'";
-						}
+			}
+
+			//SAP Document Restrictions
+			if (gvSapDocument) {
+				lvQuery = lvQuery + ' WHERE J1."SAP_DOCUMENT" = ' + "'" + gvSapDocument + "'";
+			}
+
+			//Fiscal Year
+			if (gvFiscalYear) {
+				if (lvQuery) {
+					if (lvQuery.indexOf('WHERE') === -1) {
+						lvQuery = lvQuery + ' WHERE J1."FISCAL_YEAR" = ' + "'" + gvFiscalYear + "'";
 					} else {
-						lvQuery = lvQuery + ' WHERE COMPANY_CODE = ' + "'" + gvCompanyCode + "'";
+						lvQuery = lvQuery + ' AND J1."FISCAL_YEAR" = ' + "'" + gvFiscalYear + "'";
+					}
+				} else {
+					lvQuery = lvQuery + ' WHERE J1."FISCAL_YEAR" = ' + "'" + gvFiscalYear + "'";
+				}
+			}
+
+			//Company Code Restriction
+			if (!gvCompanyCodes && gvCompanyCode) {
+				if (lvQuery.indexOf('WHERE') === -1) {
+					lvQuery = lvQuery + ' WHERE J1."COMPANY_CODE" = ' + "'" + gvCompanyCode + "'";
+				} else {
+					lvQuery = lvQuery + ' AND J1."COMPANY_CODE" = ' + "'" + gvCompanyCode + "'";
+				}
+			} else if (gvCompanyCodes) {
+				for (var j = 0; j <= gvCompanyCodes.length; j++) {
+					if (gvCompanyCodes[j]) {
+						if (j === 0) {
+							if (lvQuery.indexOf('WHERE') === -1) {
+								lvQuery = lvQuery + ' WHERE ( J1."COMPANY_CODE" = ' + "'" + gvCompanyCodes[j] + "'";
+							} else {
+								lvQuery = lvQuery + ' AND ( J1."COMPANY_CODE" = ' + "'" + gvCompanyCodes[j] + "'";
+							}
+
+						} else {
+							lvQuery = lvQuery + ' OR J1."COMPANY_CODE" = ' + "'" + gvCompanyCodes[j] + "' )";
+						}
 					}
 				}
-				if (gvPostingDate) {
-					if (lvQuery) {
-						if (lvQuery.indexOf('WHERE') === -1) {
-							lvQuery = lvQuery + ' WHERE POSTING_DATE = ' + "'" + gvPostingDate + "'";
+			}
+
+			//Posting Date Restriction
+			if (!gvPostingDates && gvPostingDate) {
+				lvQuery = lvQuery + ' WHERE J1."POSTING_DATE" = ' + "'" + gvPostingDate + "'";
+			} else if (gvPostingDates) {
+				for (var j = 0; j <= gvPostingDates.length; j++) {
+					if (gvPostingDates[j]) {
+						if (j === 0) {
+							if (lvQuery.indexOf('WHERE') === -1) {
+								lvQuery = lvQuery + ' WHERE ( J1."POSTING_DATE" = ' + "'" + gvPostingDates[j] + "'";
+							} else {
+								lvQuery = lvQuery + ' AND ( J1."POSTING_DATE" = ' + "'" + gvPostingDates[j] + "'";
+							}
+
 						} else {
-							lvQuery = lvQuery + ' AND POSTING_DATE = ' + "'" + gvPostingDate + "'";
+							lvQuery = lvQuery + ' OR J1."POSTING_DATE" = ' + "'" + gvPostingDates[j] + "' )";
 						}
-					} else {
-						lvQuery = lvQuery + ' WHERE POSTING_DATE = ' + "'" + gvPostingDate + "'";
 					}
 				}
-				if (gvReferenceDocument) {
-					if (lvQuery) {
-						if (lvQuery.indexOf('WHERE') === -1) {
-							lvQuery = lvQuery + ' WHERE REFERENCE_DOCUMENT = ' + "'" + gvReferenceDocument + "'";
-						} else {
-							lvQuery = lvQuery + ' AND REFERENCE_DOCUMENT = ' + "'" + gvReferenceDocument + "'";
-						}
+			}
+
+			if (gvReferenceDocument) {
+				if (lvQuery) {
+					if (lvQuery.indexOf('WHERE') === -1) {
+						lvQuery = lvQuery + ' WHERE J1."REFERENCE_DOCUMENT" = ' + "'" + gvReferenceDocument + "'";
 					} else {
-						lvQuery = lvQuery + ' WHERE REFERENCE_DOCUMENT = ' + "'" + gvReferenceDocument + "'";
+						lvQuery = lvQuery + ' AND J1."REFERENCE_DOCUMENT" = ' + "'" + gvReferenceDocument + "'";
+					}
+				} else {
+					lvQuery = lvQuery + ' WHERE J1."REFERENCE_DOCUMENT" = ' + "'" + gvReferenceDocument + "'";
+				}
+			}
+
+			//Posting Status Restriction
+			if (!gvPostingStatus && gvPostingStatuses) {
+				if (gvPostingStatus === "Parked") {
+					status = "V";
+				} else {
+					status = "";
+				}
+				if (lvQuery.indexOf('WHERE') === -1) {
+					lvQuery = lvQuery + ' WHERE J1."DOCUMENT_STATUS" = ' + "'" + status + "'";
+				} else {
+					lvQuery = lvQuery + ' AND J1."DOCUMENT_STATUS" = ' + "'" + status + "'";
+				}
+			} else if (gvPostingStatuses) {
+				for (var j = 0; j <= gvPostingStatuses.length; j++) {
+					if (gvPostingStatuses[j]) {
+						if (gvPostingStatuses[j] === "Parked") {
+							status = "V";
+						} else {
+							status = "";
+						}
+						if (j === 0) {
+							if (lvQuery.indexOf('WHERE') === -1) {
+								lvQuery = lvQuery + ' WHERE ( J1."DOCUMENT_STATUS" = ' + "'" + status + "'";
+							} else {
+								lvQuery = lvQuery + ' AND ( J1."DOCUMENT_STATUS" = ' + "'" + status + "'";
+							}
+
+						} else {
+							lvQuery = lvQuery + ' OR J1."DOCUMENT_STATUS" = ' + "'" + status + "' )";
+						}
 					}
 				}
 			}
@@ -136,8 +272,19 @@
 					UPDATE_GUID: oResultSet.getString(24)
 				};
 
-				oResult.records.push(record);
+				if (lvSapDocument !== oResultSet.getString(1)) 
+				{
+					oResult.records.push(record);
+					lvSapDocument = oResultSet.getString(1);
+					lvCompanyCode = oResultSet.getString(3);
+					lvFiscalYear = oResultSet.getString(2);
+				} else {
+					lvSapDocument = oResultSet.getString(1);
+					lvCompanyCode = oResultSet.getString(3);
+					lvFiscalYear = oResultSet.getString(2);
+				}
 				record = "";
+
 			}
 			oResultSet.close();
 			oStatement.close();

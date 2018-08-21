@@ -42,21 +42,21 @@
 
 	//Check if there are multiple Company Code Restrictions
 	if (gvCompanyCode) {
-		if (gvCompanyCodes.indexOf(',') !== -1) {
+		if (gvCompanyCode.indexOf(',') !== -1) {
 			gvCompanyCodes = gvCompanyCode.split(',');
 		}
 	}
 
 	//Check if there are multiple GL Account Restrictions
 	if (gvGlAccount) {
-		if (gvGlAccounts.indexOf(',') !== -1) {
+		if (gvGlAccount.indexOf(',') !== -1) {
 			gvGlAccounts = gvGlAccount.split(',');
 		}
 	}
 
 	//Check if there are multiple Posting Status Restrictions
 	if (gvPostingStatus) {
-		if (gvPostingStatuses.indexOf(',') !== -1) {
+		if (gvPostingStatus.indexOf(',') !== -1) {
 			gvPostingStatuses = gvPostingStatus.split(',');
 		}
 	}
@@ -113,13 +113,13 @@
 				if (gvPostingDates[j]) {
 					if (j === 0) {
 						if (lvQuery.indexOf('WHERE') === -1) {
-							lvQuery = lvQuery + ' WHERE J1."POSTING_DATE" = ' + "'" + gvPostingDates[j] + "'";
+							lvQuery = lvQuery + ' WHERE ( J1."POSTING_DATE" = ' + "'" + gvPostingDates[j] + "'";
 						} else {
-							lvQuery = lvQuery + ' AND J1."POSTING_DATE" = ' + "'" + gvPostingDates[j] + "'";
+							lvQuery = lvQuery + ' AND ( J1."POSTING_DATE" = ' + "'" + gvPostingDates[j] + "'";
 						}
 
 					} else {
-						lvQuery = lvQuery + ' OR J1."POSTING_DATE" = ' + "'" + gvPostingDates[j] + "'";
+						lvQuery = lvQuery + ' OR J1."POSTING_DATE" = ' + "'" + gvPostingDates[j] + "' )";
 					}
 				}
 			}
@@ -137,20 +137,20 @@
 				if (gvCompanyCodes[j]) {
 					if (j === 0) {
 						if (lvQuery.indexOf('WHERE') === -1) {
-							lvQuery = lvQuery + ' WHERE J1."COMPANY_CODE" = ' + "'" + gvCompanyCodes[j] + "'";
+							lvQuery = lvQuery + ' WHERE ( J1."COMPANY_CODE" = ' + "'" + gvCompanyCodes[j] + "'";
 						} else {
-							lvQuery = lvQuery + ' AND J1."COMPANY_CODE" = ' + "'" + gvCompanyCodes[j] + "'";
+							lvQuery = lvQuery + ' AND ( J1."COMPANY_CODE" = ' + "'" + gvCompanyCodes[j] + "'";
 						}
 
 					} else {
-						lvQuery = lvQuery + ' OR J1."COMPANY_CODE" = ' + "'" + gvCompanyCodes[j] + "'";
+						lvQuery = lvQuery + ' OR J1."COMPANY_CODE" = ' + "'" + gvCompanyCodes[j] + "' )";
 					}
 				}
 			}
 		}
 
 		//GL Account Restriction
-		if (!gvGlAccount && gvGlAccounts) {
+		if (!gvGlAccounts && gvGlAccount) {
 			if (lvQuery.indexOf('WHERE') === -1) {
 				lvQuery = lvQuery + ' WHERE J2."GL_ACCOUNT" = ' + "'" + gvGlAccount + "'";
 			} else {
@@ -161,13 +161,13 @@
 				if (gvGlAccounts[j]) {
 					if (j === 0) {
 						if (lvQuery.indexOf('WHERE') === -1) {
-							lvQuery = lvQuery + ' WHERE J2."GL_ACCOUNT" = ' + "'" + gvGlAccounts[j] + "'";
+							lvQuery = lvQuery + ' WHERE ( J2."GL_ACCOUNT" = ' + "'" + gvGlAccounts[j] + "'";
 						} else {
-							lvQuery = lvQuery + ' AND J2."GL_ACCOUNT" = ' + "'" + gvGlAccounts[j] + "'";
+							lvQuery = lvQuery + ' AND ( J2."GL_ACCOUNT" = ' + "'" + gvGlAccounts[j] + "'";
 						}
 
 					} else {
-						lvQuery = lvQuery + ' OR J2."GL_ACCOUNT" = ' + "'" + gvGlAccounts[j] + "'";
+						lvQuery = lvQuery + ' OR J2."GL_ACCOUNT" = ' + "'" + gvGlAccounts[j] + "' )";
 					}
 				}
 			}
@@ -195,13 +195,13 @@
 					}
 					if (j === 0) {
 						if (lvQuery.indexOf('WHERE') === -1) {
-							lvQuery = lvQuery + ' WHERE J1."DOCUMENT_STATUS" = ' + "'" + status + "'";
+							lvQuery = lvQuery + ' WHERE ( J1."DOCUMENT_STATUS" = ' + "'" + status + "'";
 						} else {
-							lvQuery = lvQuery + ' AND J1."DOCUMENT_STATUS" = ' + "'" + status + "'";
+							lvQuery = lvQuery + ' AND ( J1."DOCUMENT_STATUS" = ' + "'" + status + "'";
 						}
 
 					} else {
-						lvQuery = lvQuery + ' OR J1."DOCUMENT_STATUS" = ' + "'" + status + "'";
+						lvQuery = lvQuery + ' OR J1."DOCUMENT_STATUS" = ' + "'" + status + "' )";
 					}
 				}
 			}
@@ -241,7 +241,7 @@
 				lvCompanyCode = rs.getString(3);
 				lvAmount = parseFloat(lvAmount);
 
-				if (lvAmount > 0) {
+//				if (lvAmount > 0) {
 					if (lvType === "Profit_Loss") {
 						lvPLAmount = parseFloat(lvPLAmount) + lvAmount;
 					} else if (lvType === "Balance_Sheet") {
@@ -249,7 +249,7 @@
 					} else if (lvType === "Off_Balance_Sheet") {
 						lvOBSAmount = parseFloat(lvOBSAmount) + lvAmount;
 					}
-				}
+//				}
 			}
 		}
 

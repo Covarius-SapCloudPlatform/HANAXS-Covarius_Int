@@ -130,9 +130,9 @@
 			} else {
 				lvCurrency = rs.getString(1);
 				lvCalc = parseFloat(rs.getString(2));
-				if (lvCalc > 0) {
+//				if (lvCalc > 0) {
 					lvAmount = parseFloat(lvAmount) + lvCalc;
-				}
+//				}
 			}
 		}
 		//Get the Last Item
