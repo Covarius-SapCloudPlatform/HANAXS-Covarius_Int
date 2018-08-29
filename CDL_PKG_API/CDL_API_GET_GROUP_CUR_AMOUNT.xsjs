@@ -9,7 +9,7 @@
 	// Grouping Values for Base Currency and Amount             //
 	// with paramter to indicate when Reporting Currency or     //
 	// Base Currency is to be used.                             //
-	// Parameter: currencyType (BC or RC)                       //
+	// Parameter: currencyType (BC or RC), and postingDate      //
 	//----------------------------------------------------------//
 
 	// -------------------------------------------------------- // 
@@ -22,7 +22,7 @@
 	var gvHeaderTable = 'CDL_GL_HEADER';
 	var gvCurrencyTable = "CDL_GL_CURRENCY";
 	//Variable for Latest Posting Date
-	var gvPostingDate;
+	var gvPostingDate = $.request.parameters.get('postingDate');
 	//Get the Currency Type Variable
 	var gvCurrencyType = $.request.parameters.get('currencyType');
 
@@ -77,24 +77,17 @@
 			lvAmount = 0,
 			lvCalc = 0,
 			lvCurrencyField;
-	
-	    //Determine field to use base on currencyType
-	    if(gvCurrencyType)
-	    {
-	        if(gvCurrencyType == "BC")
-	        {
-	            lvCurrencyField = "CURRENCY_ISO";
-	        }
-	        else
-	        {
-	            lvCurrencyField = "CURRENCY";
-	        }
-	    }
-	    else
-	    {
-	        lvCurrencyField = "CURRENCY_ISO";
-	    }
-	    
+
+		//Determine field to use base on currencyType
+		if (gvCurrencyType) {
+			if (gvCurrencyType == "BC") {
+				lvCurrencyField = "CURRENCY_ISO";
+			} else {
+				lvCurrencyField = "CURRENCY";
+			}
+		} else {
+			lvCurrencyField = "CURRENCY_ISO";
+		}
 
 		//Get the Connection to the Database
 		var conn = $.db.getConnection();
@@ -130,9 +123,9 @@
 			} else {
 				lvCurrency = rs.getString(1);
 				lvCalc = parseFloat(rs.getString(2));
-//				if (lvCalc > 0) {
-					lvAmount = parseFloat(lvAmount) + lvCalc;
-//				}
+				//				if (lvCalc > 0) {
+				lvAmount = parseFloat(lvAmount) + lvCalc;
+				//				}
 			}
 		}
 		//Get the Last Item
@@ -163,9 +156,11 @@
 			}));
 		} else {
 			try {
-				//Get the lates Posting Date
-				getLatestPostingDate();
-
+				//Get the lates Posting Date if it has not been passed in
+				if (!gvPostingDate || gvPostingDate === "") {
+					getLatestPostingDate();
+				}
+				
 				//Calculate Statistics
 				var records = getEntries();
 

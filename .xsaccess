@@ -45,6 +45,26 @@
      {
            "source": "/CDL_PKG_API/CDL_API_GET_LATEST_POSTING_STATS/(.*)",
            "target": "/CDL_PKG_API/CDL_API_GET_LATEST_POSTING_STATS.xsjs/$1"
+    },
+         {
+           "source": "/CDL_PKG_API/CDL_API_GET_GROUP_CUR_AMOUNT/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_GROUP_CUR_AMOUNT.xsjs/$1"
+    },
+    {
+           "source": "/CDL_PKG_API/CDL_API_GET_GL_ITEM/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_GL_ITEM.xsjs/$1"
+    },
+        {
+           "source": "/CDL_PKG_API/CDL_API_GET_GROUP_CUR_AC_TYPE/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_GROUP_CUR_AC_TYPE.xsjs/$1"
+    },
+    {
+           "source": "/CDL_PKG_API/CDL_API_GET_ACC_CAT_MAP/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_ACC_CAT_MAP.xsjs/$1"
+    },
+    {
+           "source": "/CDL_PKG_API/CDL_API_POST_ACC_CAT_MAP/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_POST_ACC_CAT_MAP.xsjs/$1"
     }],
     "cache_control" : "private, no-cache, no-store, must-revalidate"
 }

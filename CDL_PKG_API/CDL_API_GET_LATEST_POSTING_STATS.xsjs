@@ -6,7 +6,8 @@
 	// Company: Covarius                                        //
 	// Date: 2018-08-15                                         //
 	// Description: REST service to be able to retrieve the     //
-	// statistics of the latest posting date found.             //
+	// statistics of the latest posting date found. Or based    //
+	// on the postingDate that has been passed in.              //
 	//----------------------------------------------------------//
 
 	// -------------------------------------------------------- // 
@@ -19,12 +20,14 @@
 	var gvHeaderTable = 'CDL_GL_HEADER';
 	var gvMasterTable = "CDL_GL_MASTER";
 	//Variable for Latest Posting Date
-	var gvPostingDate;
+	var gvPostingDate = $.request.parameters.get('postingDate');
 
 	//Variables for Carrying Statistics totals
 	var gvPosted = 0,
 		gvParked = 0,
 		gvRejected = 0,
+		gvAcknowledged = 0,
+		gvSent = 0,
 		gvRecord = {};
 
 	// -------------------------------------------------------- // 
@@ -119,6 +122,10 @@
 				gvPosted = gvPosted + 1;
 			} else if (rs.getString(1) == "REJECTED") {
 				gvRejected = gvRejected + 1;
+			} else if (rs.getString(1) == "ACKNOWLEDGED") {
+				gvAcknowledged = gvAcknowledged + 1;
+			} else if (rs.getString(1) == "SENT") {
+				gvSent = gvSent + 1;
 			}
 		}
 
@@ -142,9 +149,10 @@
 			}));
 		} else {
 			try {
-				//Get the lates Posting Date
-				getLatestPostingDate();
-
+				//Get the lates Posting Date if it has not been passed in
+				if (!gvPostingDate || gvPostingDate === "") {
+					getLatestPostingDate();
+				}
 				//Calculate Statistics
 				getEntries();
 
@@ -152,7 +160,9 @@
 					POSTING_DATE: gvPostingDate,
 					PARKED: gvParked,
 					POSTED: gvPosted,
-					REJECTED: gvRejected
+					REJECTED: gvRejected,
+					SENT: gvSent,
+					ACKNOWLEDGED: gvAcknowledged
 				};
 
 				$.response.status = 200;

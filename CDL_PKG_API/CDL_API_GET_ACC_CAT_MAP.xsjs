@@ -4,11 +4,10 @@
 	// -------------------------------------------------------- //
 	// Author: Jacques Otto                                     //
 	// Company: Covarius                                        //
-	// Date: 2018-08-15                                         //
+	// Date: 2018-08-28                                         //
 	// Description: REST service to be able to read entries     //
-	// from the GL Master Table.  Allowing filters              //
-	// on the messageGuid and referenceDocument to be passed in //
-	// as optional paramters.                                   //
+	// from the Account Category/Type Mapping Table. Allowing   //
+	// filters on itemText.                                     //
 	//----------------------------------------------------------//
 
 	// -------------------------------------------------------- // 
@@ -16,10 +15,10 @@
 	// -------------------------------------------------------- //
 	//Variables declaring the table details
 	var gvSchemaName = 'CDL_SCH_LOGGING';
-	var gvTableName = 'CDL_GL_MASTER';
-	var gvMessageGuid = $.request.parameters.get('messageGuid');
-	var gvReferenceDoc = $.request.parameters.get('referenceDoc');
+	var gvTable = 'CDL_ACC_CAT_MAP';
 	var gvErrorMessage;
+
+	var gvItemText = $.request.parameters.get('itemText');
 
 	// -------------------------------------------------------- // 
 	// Component Declarations                                   //
@@ -30,7 +29,7 @@
 		$.response.setBody(JSON.stringify({
 			message: "API Called",
 			result: "Only GET Operation is supported, " +
-				"with parameters messageGuid, optionally"
+				"with parameters itemText, optionally"
 		}));
 	}
 	// -------------------------------------------------------- // 
@@ -39,21 +38,11 @@
 	function _getEntries() {
 		try {
 			//Variable to keep query statement 
-			var lvQuery;
+			var lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTable + '"';
 
-			if (!gvMessageGuid) {
-				lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTableName + '"';
-			} else {
-				lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTableName + '"';
-				lvQuery = lvQuery + ' WHERE MESSAGE_GUID = ' + "'" + gvMessageGuid + "'";
-			}
-
-			if (gvReferenceDoc) {
-				if (lvQuery.indexOf('WHERE') === -1) {
-					lvQuery = lvQuery + ' WHERE "REFERENCE_DOCUMENT" = ' + "'" + gvReferenceDoc + "'";
-				} else {
-					lvQuery = lvQuery + ' AND "REFERENCE_DOCUMENT" = ' + "'" + gvReferenceDoc + "'";
-				}
+			//Check if Item Text is used as restriction
+			if (gvItemText) {
+				lvQuery = lvQuery + ' WHERE "ITEM_TEXT" = ' + "'" + gvItemText + "'";
 			}
 
 			//Connect to the Database and execute the query
@@ -67,18 +56,13 @@
 			while (oResultSet.next()) {
 
 				var record = {
-					MESSAGE_GUID: oResultSet.getString(1),
-					STATUS: oResultSet.getString(2),
-					DIRECTION: oResultSet.getString(3),
-					DATE: oResultSet.getString(4),
-					SAP_DOCUMENT: oResultSet.getString(5),
-					FISCAL_YEAR: oResultSet.getString(6),
-					COMPANY_CODE: oResultSet.getString(7),
-					REFERENCE_DOCUMENT: oResultSet.getString(8)
+					ITEM_TEXT: oResultSet.getString(1),
+					ACCOUNT_TYPE: oResultSet.getString(2),
+					ACCOUNT_CATEGORY: oResultSet.getString(3)
 				};
 
 				oResult.records.push(record);
-				record = "";
+
 			}
 			oResultSet.close();
 			oStatement.close();
@@ -111,7 +95,7 @@
 			$.response.setBody(JSON.stringify({
 				message: "API Called",
 				result: "Only GET Operation is supported, " +
-					"with parameters messageGuid, optionally"
+					"with parameters itemText, optionally"
 			}));
 		} else if ($.request.method === $.net.http.GET) {
 			//Perform Read to get entries

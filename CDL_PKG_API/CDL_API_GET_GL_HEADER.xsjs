@@ -171,7 +171,11 @@
 
 			//Posting Date Restriction
 			if (!gvPostingDates && gvPostingDate) {
-				lvQuery = lvQuery + ' WHERE J1."POSTING_DATE" = ' + "'" + gvPostingDate + "'";
+				if (lvQuery.indexOf('WHERE') === -1) {
+					lvQuery = lvQuery + ' WHERE J1."POSTING_DATE" = ' + "'" + gvPostingDate + "'";
+				} else {
+					lvQuery = lvQuery + ' AND J1."POSTING_DATE" = ' + "'" + gvPostingDate + "'";
+				}
 			} else if (gvPostingDates) {
 				for (var j = 0; j <= gvPostingDates.length; j++) {
 					if (gvPostingDates[j]) {
@@ -272,8 +276,7 @@
 					UPDATE_GUID: oResultSet.getString(24)
 				};
 
-				if (lvSapDocument !== oResultSet.getString(1)) 
-				{
+				if (lvSapDocument !== oResultSet.getString(1)) {
 					oResult.records.push(record);
 					lvSapDocument = oResultSet.getString(1);
 					lvCompanyCode = oResultSet.getString(3);
