@@ -847,6 +847,109 @@
 	}
 
 	// -------------------------------------------------------- // 
+	// Function to get the grouped amounts per quarter
+	// -------------------------------------------------------- //
+	function getEntriesPerYear() {
+		//Variables
+		var lvQuery,
+			item,
+			lvType,
+			lvAmount = 0,
+			lvPostingDate = "",
+			lvYear = "",
+			lvBSAmount = 0,
+			lvPLAmount = 0,
+			lvCompanyCode,
+			lvOBSAmount = 0,
+			records = [];
+
+		//Get the Connection to the Database
+		var conn = $.db.getConnection();
+
+		// SELECT J1."SAP_DOCUMENT", J1."FISCAL_YEAR", J1."COMPANY_CODE", J2."ITEM_TEXT", J2."ITEM_NO"
+		// from "CDL_SCH_LOGGING"."CDL_GL_HEADER" as J1
+		// inner join "CDL_SCH_LOGGING"."CDL_GL_ITEM" as J2
+		// on J1."SAP_DOCUMENT" = J2."SAP_DOCUMENT"
+		// and J1."FISCAL_YEAR" = J2."FISCAL_YEAR"
+		// and J1."COMPANY_CODE" = J2."COMPANY_CODE"
+
+		lvQuery = 'SELECT J1."SAP_DOCUMENT", J1."FISCAL_YEAR", J1."COMPANY_CODE", J1."POSTING_DATE", J2."ITEM_TEXT", J2."ITEM_NO"';
+		lvQuery = lvQuery + 'FROM "' + gvSchemaName + '"."' + gvHeaderTable + '" as J1 ';
+		lvQuery = lvQuery + 'INNER JOIN "' + gvSchemaName + '"."' + gvItemTable + '" as J2 ';
+		lvQuery = lvQuery + 'ON J1."SAP_DOCUMENT" = J2."SAP_DOCUMENT" ';
+		lvQuery = lvQuery + 'AND J1."FISCAL_YEAR" = J2."FISCAL_YEAR" ';
+		lvQuery = lvQuery + 'AND J1."COMPANY_CODE" = J2."COMPANY_CODE" ';
+
+		//Order by Company Code
+		lvQuery = lvQuery + 'ORDER BY J1."COMPANY_CODE", J1."POSTING_DATE"';
+
+		//Prepare the SQL Statement to read the entries
+		var pstmtSrcKeys = conn.prepareStatement(lvQuery);
+
+		//Execute the Query
+		var rs = pstmtSrcKeys.executeQuery();
+
+		//Map and Save the results
+		while (rs.next()) {
+
+			lvPostingDate = rs.getString(4);
+			lvAmount = getValues(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(6));
+			lvType = getType(rs.getString(5));
+
+			if ((rs.getString(3) != lvCompanyCode && lvCompanyCode) &&
+				(lvPostingDate.substring(0, 4) != lvYear && lvYear)) {
+
+				item = {
+					"YEAR": lvYear,
+					"COMPANY_CODE": lvCompanyCode,
+					"PROFIT_LOSS": lvPLAmount,
+					"BALANCE_SHEET": lvBSAmount,
+					"OFF_BALANCE_SHEET": lvOBSAmount
+				};
+
+				records.push(item);
+
+				//Initialize Variables
+				lvPLAmount = 0;
+				lvBSAmount = 0;
+				lvOBSAmount = 0;
+				lvCompanyCode = rs.getString(3);
+				lvYear = lvPostingDate.substring(0, 4);
+				lvAmount = parseFloat(lvAmount);
+
+			} else {
+				lvCompanyCode = rs.getString(3);
+				lvAmount = parseFloat(lvAmount);
+                lvYear = lvPostingDate.substring(0, 4);
+                
+				if (lvType === "Profit_Loss") {
+					lvPLAmount = parseFloat(lvPLAmount) + lvAmount;
+				} else if (lvType === "Balance_Sheet") {
+					lvBSAmount = parseFloat(lvBSAmount) + lvAmount;
+				} else if (lvType === "Off_Balance_Sheet") {
+					lvOBSAmount = parseFloat(lvOBSAmount) + lvAmount;
+				}
+			}
+		}
+
+		item = {
+			"YEAR": lvYear,
+			"COMPANY_CODE": lvCompanyCode,
+			"PROFIT_LOSS": lvPLAmount,
+			"BALANCE_SHEET": lvBSAmount,
+			"OFF_BALANCE_SHEET": lvOBSAmount
+		};
+
+		records.push(item);
+
+		//Close the DB Connection
+		pstmtSrcKeys.close();
+		conn.close();
+
+		return records;
+	}
+
+	// -------------------------------------------------------- // 
 	// Main function to get the Statisctic Values               //
 	// -------------------------------------------------------- //
 	function main() {
@@ -865,6 +968,8 @@
 					var records = getEntriesPerQuarter();
 				} else if (gvPeriod === "MONTH") {
 					var records = getEntriesPerMonth();
+				} else if (gvPeriod === "YEAR") {
+					var records = getEntriesPerYear();
 				}
 
 				$.response.status = 200;
