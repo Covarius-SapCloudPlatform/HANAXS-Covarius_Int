@@ -24,6 +24,7 @@
 	var gvHeaderTable = 'CDL_GL_HEADER';
 	var gvItemTable = 'CDL_GL_ITEM';
 	var gvCurrencyTable = 'CDL_GL_CURRENCY';
+	var gvForecastMaster = 'CDL_GL_FORECAST_MASTER';
 
 	// -------------------------------------------------------- // 
 	// Component Declarations                                   //
@@ -226,6 +227,9 @@
 
 				//Insert Entries into GL_Currency Table
 				_InsertCurrencyEntry(request, response);
+
+				//Insert Entries into Forecast Master Table
+				_InsertForecastEntry(request, response);
 			}
 		} catch (errorObj) {
 			gvTableUpdate = "Error saving Payload field level entries:" + errorObj.message;
@@ -310,8 +314,8 @@
 				var lvDateString = lvDate.toISOString().substring(0, 10);
 				oStatement.setString(23, lvDateString);
 				//Update GUID
-                oStatement.setString(24, oBody.MESSAGE_GUID);
-                
+				oStatement.setString(24, oBody.MESSAGE_GUID);
+
 				//Add Batch process to executed on the database
 				oStatement.addBatch();
 
@@ -526,6 +530,89 @@
 			gvTableUpdate += ",Error saving Payload Currency field level entries:" + errorObj.message;
 		}
 	}
+
+	// 	------------------------------------------------------------- // 
+	// 	Function to create Forecast Master Table enties               //
+	// 	------------------------------------------------------------- //
+	function _InsertForecastEntry(req_json, resp_json) {
+		var lvDate,
+			lvCounter = 0;
+
+		try {
+			//Get the Request Body
+			var oBody = JSON.parse($.request.body.asString());
+
+			//Get the Database connection
+			var oConnection = $.db.getConnection();
+
+			//Build the Statement to insert the entries
+			var oStatement = oConnection.prepareStatement('INSERT INTO "' + gvSchemaName + '"."' + gvForecastMaster +
+				'" VALUES (?, ?, ?, ?, ?, ?)');
+
+			//Item Number Initialization
+			var item = 0;
+
+			//Populate the fields with values from the incoming payload
+			for (var i = 0; i < req_json.ToCurrency.length; i++) {
+				if (req_json.ToCurrency[i].Amount > 0) {
+					lvCounter = parseInt(lvCounter) + 1;
+					//SAP Document
+					oStatement.setString(1, resp_json.DocumentNumber);
+
+					//Fiscal Year
+					if (req_json.FiscalYear) {
+						oStatement.setString(2, req_json.FiscalYear);
+					} else {
+						oStatement.setString(2, resp_json.FiscalYear);
+					}
+					//Company Code
+					if (req_json.CompanyCode) {
+						oStatement.setString(3, req_json.CompanyCode);
+					} else {
+						oStatement.setString(3, resp_json.CompanyCode);
+					}
+
+					//Item
+					if (!req_json.ToCurrency[i].ItemNumber) {
+						item = item + 1;
+						var itemNumber = padToThree(item);
+						oStatement.setString(4, itemNumber);
+					} else {
+						oStatement.setString(4, req_json.ToCurrency[i].ItemNumber);
+					}
+
+					//Posting Date
+					lvDate = "";
+					lvDate = req_json.PostingDate.substring(0, 4) + "-" + req_json.PostingDate.substring(4, 6) + "-" + req_json.PostingDate.substring(6,
+						8);
+					oStatement.setString(5, lvDate);
+
+					//Amount
+					oStatement.setString(6, req_json.ToCurrency[i].Amount);
+
+					//Add Batch process to executed on the database
+					oStatement.addBatch();
+				}
+			}
+
+			//Prepare the Batch Statement
+			oStatement.setBatchSize(lvCounter);
+
+			//Execute the Insert
+			oStatement.executeBatch();
+
+			//Close the connection
+			oStatement.close();
+			oConnection.commit();
+			oConnection.close();
+
+			gvTableUpdate += ",Table entries created for CDL_GL_FORECAST_MASTER";
+
+		} catch (errorObj) {
+			gvTableUpdate += ",Error saving GL Forecast Master entries:" + errorObj.message;
+		}
+	}
+
 	// -------------------------------------------------------- // 
 	// Function to Pad Item Number                             //
 	// -------------------------------------------------------- //	

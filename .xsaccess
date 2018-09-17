@@ -65,6 +65,26 @@
     {
            "source": "/CDL_PKG_API/CDL_API_POST_ACC_CAT_MAP/(.*)",
            "target": "/CDL_PKG_API/CDL_API_POST_ACC_CAT_MAP.xsjs/$1"
+    },
+        {
+           "source": "/CDL_PKG_API/CDL_API_GET_PULSE_ALERT_CONFIG/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_PULSE_ALERT_CONFIG.xsjs/$1"
+    },
+        {
+           "source": "/CDL_PKG_API/CDL_API_GET_PULSE_ALERT_MASTER/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_PULSE_ALERT_MASTER.xsjs/$1"
+    },
+        {
+           "source": "/CDL_PKG_API/CDL_API_POST_PULSE_ALERT_CONFIG/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_POST_PULSE_ALERT_CONFIG.xsjs/$1"
+    },
+    {
+           "source": "/CDL_PKG_API/CDL_API_GET_PULSE_CONFIG/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_PULSE_CONFIG.xsjs/$1"
+    },
+    {
+           "source": "/CDL_PKG_API/CDL_API_POST_PULSE_CONFIG/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_POST_PULSE_CONFIG.xsjs/$1"
     }],
     "cache_control" : "private, no-cache, no-store, must-revalidate"
 }

@@ -21,8 +21,10 @@
 	var gvSchemaName = 'CDL_SCH_LOGGING';
 	var gvHeaderTable = 'CDL_GL_HEADER';
 	var gvCurrencyTable = "CDL_GL_CURRENCY";
+
 	//Variable for Latest Posting Date
 	var gvPostingDate = $.request.parameters.get('postingDate');
+
 	//Get the Currency Type Variable
 	var gvCurrencyType = $.request.parameters.get('currencyType');
 
@@ -123,9 +125,9 @@
 			} else {
 				lvCurrency = rs.getString(1);
 				lvCalc = parseFloat(rs.getString(2));
-				//				if (lvCalc > 0) {
-				lvAmount = parseFloat(lvAmount) + lvCalc;
-				//				}
+				if (lvCalc > 0 && lvCurrency !== "" && lvCurrency !== null) {
+					lvAmount = parseFloat(lvAmount) + lvCalc;
+				}
 			}
 		}
 		//Get the Last Item
@@ -156,13 +158,13 @@
 			}));
 		} else {
 			try {
-				//Get the lates Posting Date if it has not been passed in
-				if (!gvPostingDate || gvPostingDate === "") {
-					getLatestPostingDate();
-				}
-				
-				//Calculate Statistics
-				var records = getEntries();
+					//Get the lates Posting Date if it has not been passed in
+					if (!gvPostingDate || gvPostingDate === "") {
+						getLatestPostingDate();
+					}
+
+					//Calculate Statistics
+					var records = getEntries();
 
 				$.response.status = 200;
 				$.response.setBody(JSON.stringify({

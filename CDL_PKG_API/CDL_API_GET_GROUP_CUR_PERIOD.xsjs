@@ -263,7 +263,9 @@
 		pstmtSrcKeys.close();
 		conn.close();
 
+		//Return the Records
 		return records;
+
 	}
 
 	// -------------------------------------------------------- // 
@@ -896,7 +898,7 @@
 			lvAmount = getValues(rs.getString(1), rs.getString(2), rs.getString(3), rs.getString(6));
 			lvType = getType(rs.getString(5));
 
-			if ((rs.getString(3) != lvCompanyCode && lvCompanyCode) &&
+			if ((rs.getString(3) != lvCompanyCode && lvCompanyCode) ||
 				(lvPostingDate.substring(0, 4) != lvYear && lvYear)) {
 
 				item = {
@@ -920,8 +922,8 @@
 			} else {
 				lvCompanyCode = rs.getString(3);
 				lvAmount = parseFloat(lvAmount);
-                lvYear = lvPostingDate.substring(0, 4);
-                
+				lvYear = lvPostingDate.substring(0, 4);
+
 				if (lvType === "Profit_Loss") {
 					lvPLAmount = parseFloat(lvPLAmount) + lvAmount;
 				} else if (lvType === "Balance_Sheet") {
