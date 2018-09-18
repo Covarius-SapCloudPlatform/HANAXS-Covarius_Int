@@ -1,0 +1,8 @@
+description = "Mailgun Email Service";
+host = "api.mailgun.net";
+port = 443;
+pathPrefix = "";
+authType = basic;
+useSSL = true;
+timeout = 0;
+sslAuth = anonymous;
