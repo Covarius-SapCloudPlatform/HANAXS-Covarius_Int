@@ -1,7 +1,10 @@
 {
     "description": "Job to send out Pulse Alerts",
-    "action": "CDL_PKG_LOGGING.CDL_PKG_JOB:CDL_JOB_UPDATE_INT_STATUS_HCI.xsjs::execute",
+    "action": "CDL_PKG_LOGGING.CDL_PKG_JOB:CDL_JOB_PULSE_ALERTS.xsjs::execute",
     "schedules": [
-
+ {
+          "description": "Job to Send Pulse Alerts 1 Time per day",
+          "xscron": "* * * * 17 0 0"
+       }
     ]
 }
