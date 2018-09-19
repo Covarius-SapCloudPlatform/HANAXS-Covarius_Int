@@ -1,0 +1,7 @@
+{
+    "description": "Job to send out Pulse Alerts",
+    "action": "CDL_PKG_LOGGING.CDL_PKG_JOB:CDL_JOB_UPDATE_INT_STATUS_HCI.xsjs::execute",
+    "schedules": [
+
+    ]
+}
