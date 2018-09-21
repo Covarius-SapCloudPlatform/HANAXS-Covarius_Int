@@ -206,39 +206,48 @@
 	function _buildHtmlEmail(oEntries, pTable) {
 
 		//Header
-		var lvText = 
-			'<h1><strong>Covarius Data Lake Pulse&nbsp;<img src="https://www.covarius.com/czusys_images/map_logo_cov_blue.png" alt="" width="100" height="50" /></strong></h1>';
-		lvText = lvText + '<h4><span style="color: #000080;"><strong>Good Day Pulse Alert Subscriber&nbsp; &nbsp;</strong></span></h4>';
-		lvText = lvText +
-			'<p><span style="color: #000000;">Some alerts have occured on the Covarius Data Lake, which we would like to bring under your attention.&nbsp;&nbsp;</span></p>';
-		lvText = lvText +
-			'<p><span style="color: #000000;">Please investigate the alerts from the below list, using the Pulse Platform, The Pulse Logging Application can be used,';
-		lvText = lvText +
-			'searching with the below Message Guid for more information.&nbsp;<a title="Pulse" href="https://neo.covarius.com/#Logging-Overview" target="https://neo.covarius.com/#Logging-Overview" rel="noopener">Pulse</a></span></p>';
+		var lvText = '<!doctype html>';
+		lvText = lvText + '<html>';
+		lvText = lvText + '<head><title></title></head>';
+		lvText = lvText + '<body>';
+		lvText = lvText + '<h2 style="background: rgb(238, 238, 238); border: 1px solid rgb(204, 204, 204); padding: 5px 10px;"><strong><span style="font-family:verdana,geneva,sans-serif;">';
+		lvText = lvText + 'Covarius Data Lake Pulse&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;';
+		lvText = lvText + '&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;';
+		lvText = lvText + '&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';
+		lvText = lvText + '</span></strong><strong><img alt="" height="50" src="https://www.covarius.com/czusys_images/map_logo_cov_blue.png" width="100" /></strong></h2>';
+		
+		lvText = lvText + '<h4><span style="color: #000080;"><strong><span style="font-family:verdana,geneva,sans-serif;">Good Day Pulse Alert Subscriber&nbsp;</span> &nbsp;</strong></span></h4>';
+		lvText = lvText + '<p><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;"><span style="color: #000000;">Some alerts have occured on the Covarius Data Lake, ';
+		lvText = lvText + 'which we would like to bring under your attention.&nbsp;&nbsp;</span></span></span></p>';
+        lvText = lvText + '<p><span style="color: #000000;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">Please investigate the alerts from the below list, ';
+        lvText = lvText + 'using the Pulse Platform, The Pulse Logging Application can be used,searching with the below Message Guid for more information.</span>&nbsp;</span>';
+        lvText = lvText + '<a href="https://neo.covarius.com/#Logging-Overview" rel="noopener" target="https://neo.covarius.com/#Logging-Overview" title="Pulse">Pulse Logging Overview</a></span></p>';
 
 		//Table
 		if (pTable === "TRUE") {
 			//Table Header
-			lvText = lvText + '<table style="background-color: #e3e3e3; border-color: #6d7a85; float: left;" border="5">';
-			lvText = lvText + '<tbody>';
+			lvText = lvText + '<table align="center" border="5" dir="ltr" style="background-color:#f2f4f9;border-color:#6677a0;float:left;">';
+			lvText = lvText + '<thead>';
 			lvText = lvText + '<tr>';
-			lvText = lvText + '<td><span style="color: #000080;"><strong>Message Guid</strong></span></td>';
-			lvText = lvText + '<td><span style="color: #000080;"><strong>Transaction Date</strong></span></td>';
-			lvText = lvText + '<td><span style="color: #000080;"><strong>Target</strong></span></td>';
-			lvText = lvText + '<td><span style="color: #000080;"><strong>Interface</strong></span></td>';
-			lvText = lvText + '<td><span style="color: #000080;"><strong>Status Code</strong></span></td>';
-			lvText = lvText + '<td><span style="color: #000080;"><strong>Message</strong></span></td>';
+			lvText = lvText + '<th scope="col"><span style="color: #000080;"><strong>Message Guid</strong></span></th>';
+			lvText = lvText + '<th scope="col"><span style="color: #000080;"><strong>Transaction Date</strong></span></th>';
+			lvText = lvText + '<th scope="col"><span style="color: #000080;"><strong>Target</strong></span></th>';
+			lvText = lvText + '<th scope="col"><span style="color: #000080;"><strong>Interface</strong></span></th>';
+			lvText = lvText + '<th scope="col"><span style="color: #000080;"><strong>Status Code</strong></span></th>';
+			lvText = lvText + '<th scope="col"><span style="color: #000080;"><strong>Message</strong></span></th>';
 			lvText = lvText + '</tr>';
+			lvText = lvText + '</thead>';
+			lvText = lvText + '<tbody>';
 
 			//Table of Items
 			for (var j = 0; j < oEntries.length; j++) {
 				lvText = lvText + '<tr>';
-				lvText = lvText + '<td>' + oEntries[j].MESSAGE_GUID + '</td>';
-				lvText = lvText + '<td>' + oEntries[j].START_TIME + '</td>';
-				lvText = lvText + '<td>' + oEntries[j].TARGET_SYS_ID + '</td>';
-				lvText = lvText + '<td>' + oEntries[j].INTERFACE + '</td>';
-				lvText = lvText + '<td>' + oEntries[j].STATUS_CODE + '</td>';
-				lvText = lvText + '<td>' + oEntries[j].STATUS_MESSAGE + '</td>';
+				lvText = lvText + '<td style="width: 10%;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">' + oEntries[j].MESSAGE_GUID + '</span></span></td>';
+				lvText = lvText + '<td style="width: 10%;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">' + oEntries[j].START_TIME + '</span></span></td>';
+				lvText = lvText + '<td style="width: 5%;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">' + oEntries[j].TARGET_SYS_ID + '</span></span></td>';
+				lvText = lvText + '<td style="width: 5%;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">' + oEntries[j].INTERFACE + '</span></span></td>';
+				lvText = lvText + '<td style="width: 5%;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">' + oEntries[j].STATUS_CODE + '</span></span></td>';
+				lvText = lvText + '<td style="width: 65%;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">' + oEntries[j].STATUS_MESSAGE + '</span></span></td>';
 				lvText = lvText + '</tr>';
 			}
 			lvText = lvText + '</tbody>';
@@ -248,11 +257,13 @@
 		//Footer
 		lvText = lvText + '<p>&nbsp;</p>';
 		lvText = lvText +
-			'<p><span style="color: #000000;">PLEASE TAKE NOTE, THIS IS A SYSTEM GENERATED MESSAGE, PLEASE DO NOT REPLY.</span></p>';
-		lvText = lvText + '<p><strong><span style="color: #000080;">Regards</span></strong></p>';
-		lvText = lvText + '<p><span style="color: #000080;">Covarius Data Lake Pulse Alerting</span></p>';
+			'<p><span style="font-size:14px;"><span style="font-family:verdana,geneva,sans-serif;"><span style="color: #000000;">PLEASE TAKE NOTE, THIS IS A SYSTEM GENERATED MESSAGE, PLEASE DO NOT REPLY.</span></span></span></p>';
+		lvText = lvText + '<p><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;"><strong><span style="color: #000080;">Regards</span></strong></span></span></p>';
+		lvText = lvText + '<p><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;"><span style="color: #000080;">Covarius Data Lake Pulse Alerting</span></span></span></p>';
 		lvText = lvText + '<p>&nbsp;</p>';
 		lvText = lvText + '<p>&nbsp;</p>';
+		lvText = lvText + '</body>';
+		lvText = lvText + '</html>';
 
 		return lvText;
 	}
