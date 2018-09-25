@@ -47,15 +47,17 @@
 			//Build the Statement to insert the entries
 			var oStatement = oConnection.prepareStatement(
 				"UPDATE \"" + gvSchemaName + "\".\"" + gvTableName +
-				"\" SET FREQ_PER_DAY = ?, ON_OFF = ? WHERE ID = ?");
+				"\" SET FREQ_PER_DAY = ?, ON_OFF = ?, ALERT_RETENTION_DAYS = ? WHERE ID = ?");
 
 			//Populate the fields with values from the incoming payload
 			//Frequency Per Day
 			oStatement.setString(1, oBody.FREQ_PER_DAY);
 			//On/Off
 			oStatement.setString(2, oBody.ON_OFF);
+			//Alert Retention Days
+			oStatement.setString(3, oBody.ALERT_RETENTION_DAYS);
 			//ID
-			oStatement.setString(3, oBody.ID);
+			oStatement.setString(4, oBody.ID);
 
 			//Add Batch process to executed on the database
 			oStatement.addBatch();

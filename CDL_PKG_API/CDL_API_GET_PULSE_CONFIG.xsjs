@@ -49,7 +49,8 @@
 				var record = {
 					ID: oResultSet.getString(1),
 					FREQ_PER_DAY: oResultSet.getString(2),
-					ON_OFF: oResultSet.getString(3)
+					ON_OFF: oResultSet.getString(3),
+					ALERT_RETENTION_DAYS: oResultSet.getString(4)
 				};
 
 				oResult.records.push(record);
