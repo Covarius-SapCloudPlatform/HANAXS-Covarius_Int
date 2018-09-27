@@ -29,7 +29,8 @@
 	//Variables for Tracing
 	var gvAlertConfigEntries,
 		gvSuccessSend = 0,
-		gvErrorSend = 0;
+		gvErrorSend = 0,
+		gvDays;
 
 	//Constants
 	var gcDataError = 'CDL-E001',
@@ -58,9 +59,11 @@
 			var oEntry = {
 				ID: lsReturn.getString(1),
 				FREQ_PER_DAY: lsReturn.getString(2),
-				ON_OFF: lsReturn.getString(3)
+				ON_OFF: lsReturn.getString(3),
+				ALERT_RETENTION_DAYS: lsReturn.getString(4)
 			};
 			Configuration.push(oEntry);
+			gvDays = lsReturn.getString(4);
 		}
 
 		//Close the DB Connection
@@ -126,9 +129,10 @@
 		for (var i = 0; i < oAlerts.length; i++) {
 
 			//Read the Entries from Pulse Log Master
-			oEntries = _readPulseLogMaster(oAlerts[i].INTERFACE, oAlerts[i].DATA_ERROR_ALERT, oAlerts[i].SAP_RESPONSE_ALERT, oAlerts[i].SAP_DELIVERY_ALERT);
+			oEntries = _readPulseLogMaster(oAlerts[i].INTERFACE, oAlerts[i].DATA_ERROR_ALERT, oAlerts[i].SAP_RESPONSE_ALERT, oAlerts[i].SAP_DELIVERY_ALERT,
+				gvDays);
 
-			if (oEntries) {
+			if (oEntries.length > 0) {
 				//Build Email Text
 				lvText = _buildTextEmail(oEntries, "TRUE");
 				//Build Email HTML
@@ -192,36 +196,74 @@
 	// -------------------------------------------------------- //
 	function _buildHtmlEmail(oEntries, pTable) {
 
+		var lvBase64HeaderImage = 'iVBORw0KGgoAAAANSUhEUgAAADgAAAA5CAAAAAExtofxAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAHKSURBVEjH7ZVtjcMwEESHgimYghmUgzGEwZIIgmAohUAIBVNYCu9+OF9O2qQ66U466bZS29HL2Nv1dq2+htYoUpakSWiQNCEkaZRrF7i7u+vkN1WDZYEkUxJ13f0KPvvvYjKpuOpa0mRiy0kTWUKa5VX0+xhaFm4lqm+wSqQeXyRBIi+SQUKLHJFIq0Ri1CJd6lxSLh+k0cj5CD6oZPhJOGFzS/CsGj/CoR5fgucOFkyKkCXJKcoHJxRJMpAOsECom5pOsCYyMhdlD3+3QpK9j8ue9T8IWX7RWL/lekYt7OqXwAsYIVb5As4nXfAdDBXCJElP0Mk51TbIEE9wWJPpdIQPSFtbtzBsyegEd8m8gpL0mLv3COdkkk7QS6ofy6j1Ev5om7yF7rx73c/372x59bf+N35k7MwsHah1ZnmV2cy6kzEUWC6OOQaA5UklByjh1vgAGNcx/AQAvzOGCfDHmiV8ZuwBhobRdS+N2hmTAyU2q4xB3d2OI/vNowOe6hi9Kk4HMLVF6Zf5+37HVADaoiyrXBj7AeZL90VpL4wAvhbFmtLeGa3plK20N8ZDUXLTgm/OMYYYt3s+xBBPt37cnvgfHT9kDN+KxBeEXVCUn9JxhwAAAABJRU5ErkJggg==';
+		var lvBase64FooterImage = 'iVBORw0KGgoAAAANSUhEUgAAAMgAAAAcCAMAAAATKQCVAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoTWFjaW50b3NoKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDoyQjgwMDRFMjVDRjIxMUU1QjI3N0ZGRTQ3NDJFQjJCMyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDo0OUNGRUQ4QTVDRkQxMUU1QjI3N0ZGRTQ3NDJFQjJCMyI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjJCODAwNEUwNUNGMjExRTVCMjc3RkZFNDc0MkVCMkIzIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjJCODAwNEUxNUNGMjExRTVCMjc3RkZFNDc0MkVCMkIzIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+zrgM9AAAAspQTFRF////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////smNKVQAAAO10Uk5TAAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE5PUFFSU1RVVldYWVpbXl9gYWJjZWZnaGlqa2xtbm9wcnN1dnd4eXp7fH1+f4CBgoOEhYaHiImKjI2Oj5CRkpOUlZaXmJqbnJ2en6Cho6Slpqepqqusra6vsLGys7S1tri5ury9vr/A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';
+		
 		//Header
 		var lvText = '<!doctype html>';
 		lvText = lvText + '<html>';
-		lvText = lvText + '<head><title></title></head>';
+		lvText = lvText + '<head><title>Covarius Data Lake - Alerting Report</title></head>';
 		lvText = lvText + '<body>';
-		lvText = lvText + '<h2 style="background: rgb(238, 238, 238); border: 1px solid rgb(204, 204, 204); padding: 5px 10px;"><strong><span style="font-family:verdana,geneva,sans-serif;">';
-		lvText = lvText + 'Covarius Data Lake Pulse&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;';
-		lvText = lvText + '&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;';
-		lvText = lvText + '&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';
-		lvText = lvText + '</span></strong><strong><img alt="" height="50" src="https://www.covarius.com/czusys_images/map_logo_cov_blue.png" width="100" /></strong></h2>';
-		
-		lvText = lvText + '<h4><span style="color: #000080;"><strong><span style="font-family:verdana,geneva,sans-serif;">Good Day Pulse Alert Subscriber&nbsp;</span> &nbsp;</strong></span></h4>';
-		lvText = lvText + '<p><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;"><span style="color: #000000;">Some alerts have occured on the Covarius Data Lake, ';
-		lvText = lvText + 'which we would like to bring under your attention.&nbsp;&nbsp;</span></span></span></p>';
-        lvText = lvText + '<p><span style="color: #000000;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">Please investigate the alerts from the below list, ';
-        lvText = lvText + 'using the Pulse Platform, The Pulse Logging Application can be used,searching with the below Message Guid for more information.</span>&nbsp;</span>';
-        lvText = lvText + '<a href="https://neo.covarius.com/#Logging-Overview" rel="noopener" target="https://neo.covarius.com/#Logging-Overview" title="Pulse">Pulse Logging Overview</a></span></p>';
+		lvText = lvText + '<h2 style="background: rgb(102, 95, 99); border: 0px solid rgb(102, 95, 99); padding: 5px 10px;"><span style=';
+		lvText = lvText +
+			'"font-weight:normal;padding:0px;text-align:left;line-height:3.5;word-break:normal;margin:0px 0px 5px;text-rendering:optimizelegibility;mso-font-alt: Arial;font-family:Lato, Arial, &quot;Helvetica Neue&quot;,';
+		lvText = lvText +
+			'Helvetica, sans-serif;font-size:20px;color:#ffffff;text-transform:uppercase;letter-spacing:2px;">COVARIUS DATA LAKE PULSE</span>&nbsp;&nbsp;&nbsp;' + '<img style="float:right;" src="data:image/png;base64,' + lvBase64HeaderImage + 
+			'" alt="" width="70" height="70" /></h2>';
+	
+		lvText = lvText +
+			'<p class="element" style="text-align:left;"> <span style="line-height:1.5;font-style:italic;mso-font-alt: Arial;font-family:&quot;Open Sans&quot;, Arial, &quot;Helvetica Neue&quot;, Helvetica, ';
+		lvText = lvText + 'sans-serif;color:#9e9e9e;letter-spacing:0px;font-size:14px;">Alerting Report</span></p>';
+		lvText = lvText +
+			'<h3 style="padding:0px;text-align:left;line-height:1.5;word-break:normal;margin:0px 0px 5px;text-rendering:optimizelegibility;mso-font-alt: sans-serif;font-family:Lato, ';
+		lvText = lvText +
+			'sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#5d6d8f;">Good Day Pulse Alert Subscriber</h3>';
+		lvText = lvText +
+			'<p style="font-weight:normal;padding:0px;text-align:left;margin:0px 0px 1.35em;mso-font-alt: Arial;font-family:&quot;Open Sans&quot;, Arial, &quot;Helvetica Neue&quot;, Helvetica, ';
+		lvText = lvText +
+			'sans-serif;color:#606060;font-size:17px;line-height:1.6;font-style:italic;">Some alerts have occured on the Covarius Data Lake, which we would like to bring under your attention.</p>';
+
+		lvText = lvText +
+			'<p style="font-weight:normal;padding:0px;text-align:left;margin:0px 0px 1.35em;line-height:1.7;mso-font-alt: Arial;font-family:&quot;Open Sans&quot;, Arial, &quot;Helvetica Neue&quot;, Helvetica, ';
+		lvText = lvText +
+			'sans-serif;font-size:15px;color:#606060;">Please investigate the alerts from the below list, using the Pulse Platform, The Pulse Logging Application can be used, searching with the below <b>';
+		lvText = lvText +
+			'Message Guid</b> for more information.&nbsp; <a title="Go to Pulse Logging" href="https://neo.covarius.com/#Logging-Overview" target="_blank" rel="noopener">Go to Pulse Logging</a>&nbsp;</p>';
 
 		//Table
 		if (pTable === "TRUE") {
+			//Header Styling
+			var lvHeadStyle1 =
+				'<th scope="col"><span style="background: rgb(102, 95, 99); border: 0px solid rgb(102, 95, 99); padding: 5px 10px;"><span style=' + '"font-weight:normal;padding:0px;text-align:left;line-height:1.5;word-break:normal;margin:0px 0px 5px;text-rendering:optimizelegibility;mso-font-alt: Arial;font-family:Lato, Arial,';
+			var lvHeadStyle2 =
+				'&quot;Helvetica Neue&quot;, Helvetica, sans-serif;font-size:14px;color:#ffffff;text-transform:uppercase;letter-spacing:2px;">';
+            
+            var lvItemStyle1 = '<td style="width: 10%;"><span style="font-size:12px;"><span style=" padding: 5px 10px;"><span style=' + '"font-weight:normal;padding:0px;text-align:left;line-height:1.5;word-break:normal;margin:0px 0px 5px;text-rendering:optimizelegibility;mso-font-alt: Arial;font-family:Lato, Arial,';
+            var lvItemStyle2 = '&quot;Helvetica Neue&quot;, Helvetica, sans-serif;font-size:12px;color:#665F63;text-transform:uppercase;letter-spacing:2px;">';
+            
 			//Table Header
-			lvText = lvText + '<table align="center" border="5" dir="ltr" style="background-color:#f2f4f9;border-color:#6677a0;float:left;">';
+			lvText = lvText +
+				'<table border="1" dir="ltr" style="background: rgb(242, 243, 244); border: 0px solid rgb(102, 95, 99); padding: 5px 10px;">';
 			lvText = lvText + '<thead>';
 			lvText = lvText + '<tr>';
-			lvText = lvText + '<th scope="col"><span style="color: #000080;"><strong>Message Guid</strong></span></th>';
-			lvText = lvText + '<th scope="col"><span style="color: #000080;"><strong>Transaction Date</strong></span></th>';
-			lvText = lvText + '<th scope="col"><span style="color: #000080;"><strong>Target</strong></span></th>';
-			lvText = lvText + '<th scope="col"><span style="color: #000080;"><strong>Interface</strong></span></th>';
-			lvText = lvText + '<th scope="col"><span style="color: #000080;"><strong>Status Code</strong></span></th>';
-			lvText = lvText + '<th scope="col"><span style="color: #000080;"><strong>Message</strong></span></th>';
+			lvText = lvText + lvHeadStyle1;
+			lvText = lvText + lvHeadStyle2;
+			lvText = lvText + 'Message Guid</span></span></th>';
+			lvText = lvText + lvHeadStyle1;
+			lvText = lvText + lvHeadStyle2;
+			lvText = lvText + 'Transaction Date</strong></span></th>';
+			lvText = lvText + lvHeadStyle1;
+			lvText = lvText + lvHeadStyle2;
+			lvText = lvText + 'Target</strong></span></th>';
+			lvText = lvText + lvHeadStyle1;
+			lvText = lvText + lvHeadStyle2;
+			lvText = lvText + 'Interface</strong></span></th>';
+			lvText = lvText + lvHeadStyle1;
+			lvText = lvText + lvHeadStyle2;
+			lvText = lvText + 'Status Code</strong></span></th>';
+			lvText = lvText + lvHeadStyle1;
+			lvText = lvText + lvHeadStyle2;
+			lvText = lvText + 'Message</strong></span></th>';
 			lvText = lvText + '</tr>';
 			lvText = lvText + '</thead>';
 			lvText = lvText + '<tbody>';
@@ -229,12 +271,18 @@
 			//Table of Items
 			for (var j = 0; j < oEntries.length; j++) {
 				lvText = lvText + '<tr>';
-				lvText = lvText + '<td style="width: 10%;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">' + oEntries[j].MESSAGE_GUID + '</span></span></td>';
-				lvText = lvText + '<td style="width: 10%;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">' + oEntries[j].START_TIME + '</span></span></td>';
-				lvText = lvText + '<td style="width: 5%;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">' + oEntries[j].TARGET_SYS_ID + '</span></span></td>';
-				lvText = lvText + '<td style="width: 5%;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">' + oEntries[j].INTERFACE + '</span></span></td>';
-				lvText = lvText + '<td style="width: 5%;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">' + oEntries[j].STATUS_CODE + '</span></span></td>';
-				lvText = lvText + '<td style="width: 65%;"><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;">' + oEntries[j].STATUS_MESSAGE + '</span></span></td>';
+				lvText = lvText + lvItemStyle1 + lvItemStyle2 +
+					oEntries[j].MESSAGE_GUID + '</span></span></span></td>';
+				lvText = lvText + lvItemStyle1 + lvItemStyle2 +
+					oEntries[j].START_TIME + '</span></span></span></td>';
+				lvText = lvText + lvItemStyle1 + lvItemStyle2 +
+					oEntries[j].TARGET_SYS_ID + '</span></span></span></td>';
+				lvText = lvText + lvItemStyle1 + lvItemStyle2 +
+					oEntries[j].INTERFACE + '</span></span></span></td>';
+				lvText = lvText + lvItemStyle1 + lvItemStyle2 +
+					oEntries[j].STATUS_CODE + '</span></span></span></td>';
+				lvText = lvText + lvItemStyle1 + lvItemStyle2 +
+					oEntries[j].STATUS_MESSAGE + '</span></span></span></td>';
 				lvText = lvText + '</tr>';
 			}
 			lvText = lvText + '</tbody>';
@@ -244,11 +292,18 @@
 		//Footer
 		lvText = lvText + '<p>&nbsp;</p>';
 		lvText = lvText +
-			'<p><span style="font-size:14px;"><span style="font-family:verdana,geneva,sans-serif;"><span style="color: #000000;">PLEASE TAKE NOTE, THIS IS A SYSTEM GENERATED MESSAGE, PLEASE DO NOT REPLY.</span></span></span></p>';
-		lvText = lvText + '<p><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;"><strong><span style="color: #000080;">Regards</span></strong></span></span></p>';
-		lvText = lvText + '<p><span style="font-size:12px;"><span style="font-family:verdana,geneva,sans-serif;"><span style="color: #000080;">Covarius Data Lake Pulse Alerting</span></span></span></p>';
-		lvText = lvText + '<p>&nbsp;</p>';
-		lvText = lvText + '<p>&nbsp;</p>';
+			'<p style="font-weight:normal;padding:0px;text-align:left;margin:0px 0px 1.35em;line-height:1.7;mso-font-alt: Arial;font-family:&quot;Open Sans&quot;, Arial, &quot;Helvetica Neue&quot;, Helvetica, ';
+		lvText = lvText + 'sans-serif;font-size:15px;color:#606060;">PLEASE TAKE NOTE THIS IS A SYSTEM GENERATED MESSAGE - PLEASE DO NOT REPLY&nbsp;</p>';
+		lvText = lvText +
+			'<h3 style="padding:0px;text-align:left;line-height:1.5;word-break:normal;margin:0px 0px 5px;text-rendering:optimizelegibility;mso-font-alt: sans-serif;font-family:Lato,';
+		lvText = lvText +
+			'sans-serif;font-size:22px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#5d6d8f;">Regards</h3>';
+		lvText = lvText + '<p class="element" style="text-align:left;"> <span style="line-height:1.5;font-style:italic;mso-font-alt: Arial;font-family:&quot;Open Sans&quot;, Arial, &quot;Helvetica Neue&quot;, Helvetica,';
+		lvText = lvText + 'sans-serif;color:#9e9e9e;letter-spacing:0px;font-size:14px;">Pulse Alerting</span> </p>';
+		lvText = lvText + '<h2 style="background: rgb(102, 95, 99); border: 0px solid rgb(102, 95, 99); padding: 5px 10px;"><span style=';
+		lvText = lvText + '"font-weight:normal;padding:0px;text-align:left;line-height:1.5;word-break:normal;margin:0px 0px 5px;text-rendering:optimizelegibility;mso-font-alt: Arial;font-family:Lato, Arial, &quot;Helvetica';
+		lvText = lvText + 'Neue&quot;, Helvetica, sans-serif;font-size:8px;color:#ffffff;text-transform:uppercase;letter-spacing:2px;">Copyright © 2018 Covarius. All Rights Reserved.</span>&nbsp;&nbsp;&nbsp;<img style="float:right;" src="data:image/png;base64,' + lvBase64FooterImage;
+		lvText = lvText + '" alt="" width="200" height="28" /></h2>';
 		lvText = lvText + '</body>';
 		lvText = lvText + '</html>';
 
@@ -262,13 +317,26 @@
 	// -------------------------------------------------------- // 
 	// Function to read the Pulse Log Master                    //
 	// -------------------------------------------------------- //
-	function _readPulseLogMaster(pInterface, pCDLE001, pCDLE003, pCDLE002) {
+	function _readPulseLogMaster(pInterface, pCDLE001, pCDLE003, pCDLE002, pDays) {
 		//Get the Connection to the Database
 		var oConnection = $.db.getConnection();
 
 		//Build the Query
 		var lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvPulseLogMasterTable + '"';
 		lvQuery = lvQuery + ' WHERE "INTERFACE" = ' + "'" + pInterface + "'";
+
+		if (pDays) {
+			//Get date number of days back based on configured days
+			var lvDate = new Date();
+			lvDate.setDate(lvDate.getDate() - pDays);
+			var lvDateString = lvDate.toISOString().split('T')[0];
+
+			if (lvQuery.indexOf('AND') === -1) {
+				lvQuery = lvQuery + ' AND "START_TIME" >= ' + "'" + lvDateString + "'";
+			} else {
+				lvQuery = lvQuery + ' OR "START_TIME" >= ' + "'" + lvDateString + "'";
+			}
+		}
 
 		if (pCDLE001 === "TRUE") {
 			lvQuery = lvQuery + ' AND "STATUS_CODE" = ' + "'" + gcDataError + "'";
@@ -376,10 +444,55 @@
 	}
 
 	// ------------------------------------------------------------- // 
+	// Function to delete entries in Master table older than 90 days //
+	// ------------------------------------------------------------- //
+	function _deleteHistoricEntries() {
+		try {
+			//Get the Database connection
+			var oConnection = $.db.getConnection();
+
+			//Get date 90 days back
+			var lvDate = new Date();
+			lvDate.setDate(lvDate.getDate() - 90);
+			var lvDateString = lvDate.toISOString().split('T')[0];
+
+			//Build the Statement to delete the entries
+			var oStatement = oConnection.prepareStatement("DELETE FROM \"" + gvSchemaName + "\".\"" + gvAlertMasterTable + "\" WHERE DATE <= ?");
+
+			//Date
+			oStatement.setString(1, lvDateString);
+
+			oStatement.addBatch();
+
+			//Execute the Insert
+			oStatement.executeBatch();
+
+			//Close the connection
+			oStatement.close();
+			oConnection.commit();
+			oConnection.close();
+
+			gvTableUpdate += "Table entries deleted for historic entries older than 90 days;";
+
+		} catch (errorObj) {
+			if (oStatement !== null) {
+				oStatement.close();
+			}
+			if (oConnection !== null) {
+				oConnection.close();
+			}
+			gvTableUpdate += ",There was a problem deleting entries in the Alert Master Table, Error: " + errorObj.message;
+		}
+	}
+
+	// ------------------------------------------------------------- // 
 	// Function to update DB Entries
 	// ------------------------------------------------------------- /
 	function _updateAlertMaster(pMailResult, oAlert) {
 		try {
+			//Delete Historic Entries
+			_deleteHistoricEntries();
+
 			//Get Database Connection
 			var oConnection = $.db.getConnection();
 
