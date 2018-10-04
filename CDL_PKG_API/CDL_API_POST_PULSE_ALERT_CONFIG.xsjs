@@ -6,29 +6,22 @@
 	// Company: Covarius                                        //
 	// Date: 2018-09-14                                         //
 	// Description: REST service to be able to create entries   //
-	// in the Pulse Alert Config Table. POST method is allowed //
+	// in the Pulse Alert Config Table. POST method is allowed  //
 	// you would need to get the x-csrf-token before doing the  //
-	// POST to the service. method paramter should be passed in //
-	// with either CREATE, DELETE, to indicate if entry is to   //
-	// be created or Deleted.                                   //
+	// POST to the service.                                     //
 	//----------------------------------------------------------//
 
 	// -------------------------------------------------------- // 
 	// Global Variables                                         //
 	// -------------------------------------------------------- //
 	//Variable to carry the table update status
-	var gvTableUpdate;
+	var gvTableUpdate,
+	    gvStatus;
 	//Variable to carry the conversion errors
 	var gvConvError;
 	//Variables declaring the table details
 	var gvSchemaName = 'CDL_SCH_LOGGING';
 	var gvTableName = 'CDL_PULSE_ALERT_CONFIG';
-
-	//For Delete a method parameter with a value of 'DELETE' is passed in
-	var gvFunction = $.request.parameters.get('method');
-
-	//Variable for last Alert ID
-	var gvAlertId;
 
 	// -------------------------------------------------------- // 
 	// Component Declarations                                   //
@@ -38,43 +31,13 @@
 		$.response.status = 200;
 		$.response.setBody(JSON.stringify({
 			message: "API Called",
-			result: "GET is not supported, perform a POST to add/delete entries in Pulse Alter Config Entry"
+			result: "GET is not supported, perform a POST to update entry in Pulse Alert Config Table"
 		}));
-	}
-	// -------------------------------------------------------- // 
-	// Function to get the latest Alert ID                     //
-	// -------------------------------------------------------- //
-	function _getLastAlertId() {
-		//Get the Connection to the Database
-		var conn = $.db.getConnection();
-
-		//Prepare the SQL Statement to read the entries
-		var pstmtSrcKeys = conn.prepareStatement(
-			"SELECT MAX(\"ALERT_ID\") FROM \"" + gvSchemaName + "\".\"" + gvTableName + "\""
-		);
-
-		//Execute the Query
-		var rs = pstmtSrcKeys.executeQuery();
-
-		//Map and Save the results
-		while (rs.next()) {
-			gvAlertId = rs.getString(1);
-			gvAlertId = parseInt(gvAlertId);
-		}
-		if (gvAlertId) {
-			gvAlertId = gvAlertId + 1;
-		} else {
-			gvAlertId = parseInt(1);
-		}
-
-		//Close the DB Connection
-		pstmtSrcKeys.close();
-		conn.close();
 	}
 	// ----------------------------------------------------------------// 
 	// Function to insert entries into the table                       //
 	// ----------------------------------------------------------------//
-	function _createEntry() {
+	function _updateEntry() {
 		try {
 			//Get the Request Body
 			var oBody = JSON.parse($.request.body.asString());
@@ -82,26 +45,48 @@
 			//Get the Database connection
 			var oConnection = $.db.getConnection();
 
-			//Build the Statement to insert the entries
-			var oStatement = oConnection.prepareStatement('INSERT INTO "' + gvSchemaName + '"."' + gvTableName +
-				'" VALUES (?, ?, ?, ?, ?, ?, ?)');
+			if (oBody.ID) {
+				//Build the Statement to update the entries
+				var oStatement = oConnection.prepareStatement(
+					"UPDATE \"" + gvSchemaName + "\".\"" + gvTableName +
+					"\" SET HUB_INTEGRATION = ?, ON_OFF = ?, ALERT_TYPE = ?, FREQUENCY = ?, FREQUENCY_VALUE = ?, ALERT_RETENTION_DAYS = ? WHERE ID = ?");
 
-			//Populate the fields with values from the incoming payload
-			//Alert ID
-			oStatement.setInt(1, gvAlertId);
-			//Recipient Email
-			oStatement.setString(2, oBody.RECIPIENT_EMAIL);
-			//Interface
-			oStatement.setString(3, oBody.INTERFACE);
-			//Email Header
-			oStatement.setString(4, oBody.EMAIL_HEADER);
-			//Data Error Alert
-			oStatement.setString(5, oBody.DATA_ERROR_ALERT);
-			//Sap Response Alert
-			oStatement.setString(6, oBody.SAP_RESPONSE_ALERT);
-			//Sap Delivery Alert
-			oStatement.setString(7, oBody.SAP_DELIVERY_ALERT);
+				//Populate the fields with values from the incoming payload
+				//Hub Integration
+				oStatement.setString(1, oBody.HUB_INTEGRATION);
+				//On/Off
+				oStatement.setString(2, oBody.ON_OFF);
+				//Alert Type
+				oStatement.setString(3, oBody.ALERT_TYPE);
+				//Frequency
+				oStatement.setString(4, oBody.FREQUENCY);
+				//Frequency Value
+				oStatement.setString(5, oBody.FREQUENCY_VALUE);
+				//Alert Retention Days
+				oStatement.setInt(6, parseFloat(oBody.ALERT_RETENTION_DAYS));
+				//ID
+				oStatement.setInt(7, parseFloat(oBody.ID));
+			} else {
+				//Build the Statement to insert the entries
+				var oStatement = oConnection.prepareStatement('INSERT INTO "' + gvSchemaName + '"."' + gvTableName +
+					'" VALUES (?, ?, ?, ?, ?, ?, ?)');
 
+				//Populate the fields with values from the incoming payload
+				//ID
+				oStatement.setInt(1, 1);
+				//Hub Integration
+				oStatement.setString(2, oBody.HUB_INTEGRATION);
+				//On/Off
+				oStatement.setString(3, oBody.ON_OFF);
+				//Alert Type
+				oStatement.setString(4, oBody.ALERT_TYPE);
+				//Frequency
+				oStatement.setString(5, oBody.FREQUENCY);
+				//Frequency Value
+				oStatement.setString(6, oBody.FREQUENCY_VALUE);
+				//Alert Retention Days
+				oStatement.setInt(7, parseFloat(oBody.ALERT_RETENTION_DAYS));
+			}
 			//Add Batch process to executed on the database
 			oStatement.addBatch();
 
@@ -113,8 +98,8 @@
 			oConnection.commit();
 			oConnection.close();
 
-			gvTableUpdate = "Table entries created successfully in Alert Config Table;";
-
+			gvTableUpdate = "Table entries updated successfully in Pulse Alert Config Table;";
+            gvStatus = "Success";
 		} catch (errorObj) {
 			if (oStatement !== null) {
 				oStatement.close();
@@ -122,52 +107,11 @@
 			if (oConnection !== null) {
 				oConnection.close();
 			}
-			gvTableUpdate = "There was a problem inserting entries into the Alert Config Table, Error: " + errorObj.message;
+			gvTableUpdate = "There was a problem updating entries in the Pulse Alert Config Table, Error: " + errorObj.message;
+			gvStatus = "Error";
 		}
 	}
 
-	// ----------------------------------------------------------------// 
-	// Function to delete entry from the table                         //
-	// ----------------------------------------------------------------//
-	function _deleteEntry() {
-		try {
-			//Get the Request Body
-			var oBody = JSON.parse($.request.body.asString());
-
-			//Get the Database connection
-			var oConnection = $.db.getConnection();
-
-			//Build the Statement to delete the entries
-			var oStatement = oConnection.prepareStatement("DELETE FROM \"" + gvSchemaName + "\".\"" + gvTableName +
-				"\" WHERE ALERT_ID = ? AND RECIPIENT_EMAIL = ?");
-
-			//Alert ID
-			oStatement.setString(1, oBody.ALERT_ID);
-			//Recipient Email
-			oStatement.setString(2, oBody.RECIPIENT_EMAIL);
-
-			oStatement.addBatch();
-
-			//Execute the Insert
-			oStatement.executeBatch();
-
-			//Close the connection
-			oStatement.close();
-			oConnection.commit();
-			oConnection.close();
-
-			gvTableUpdate = "Table entry deleted from Alert Config Table;";
-
-		} catch (errorObj) {
-			if (oStatement !== null) {
-				oStatement.close();
-			}
-			if (oConnection !== null) {
-				oConnection.close();
-			}
-			gvTableUpdate = "There was a problem deleting entry in the Alert Config Table, Error: " + errorObj.message;
-		}
-	}
 	// -------------------------------------------------------- // 
 	// Main function to add entries to the logging table        //
 	// -------------------------------------------------------- //
@@ -178,30 +122,21 @@
 			$.response.status = 200;
 			$.response.setBody(JSON.stringify({
 				message: "API Called",
-				result: "GET is not supported, perform a POST to add/delete entries in Pulse Alter Config Entry"
+				result: "GET is not supported, perform a POST to update entry in Pulse Alert Config Table"
 			}));
 		} else {
-			if (gvFunction === "DELETE") {
-				//Perform Table Entry to be deleted
-				try {
-					_deleteEntry();
-				} catch (errorObj) {
-					gvTableUpdate = "Error during table entry deletion:" + errorObj.message;
-				}
-			} else {
-				//Perform Table Entry to be created
-				try {
-					_getLastAlertId();
-					_createEntry();
-				} catch (errorObj) {
-					gvTableUpdate = "Error during table insert:" + errorObj.message;
-				}
+			//Perform Table Entry to be updated
+			try {
+				_updateEntry();
+			} catch (errorObj) {
+				gvTableUpdate = "Error during table update:" + errorObj.message;
 			}
 
 			$.response.status = 200;
 			$.response.setBody(JSON.stringify({
 				message: "API Called",
-				TableUpdateStatus: gvTableUpdate
+				TableUpdateMessage: gvTableUpdate,
+				Status:gvStatus
 			}));
 		}
 	}

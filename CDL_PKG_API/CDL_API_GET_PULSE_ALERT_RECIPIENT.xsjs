@@ -6,7 +6,8 @@
 	// Company: Covarius                                        //
 	// Date: 2018-09-14                                         //
 	// Description: REST service to be able to read entries     //
-	// from the Pulse Alert Configuration Table.                //
+	// from the Pulse Alert Recipient Table. Allowing           //
+	// filters on recipientEmail.                               //
 	//----------------------------------------------------------//
 
 	// -------------------------------------------------------- // 
@@ -14,8 +15,10 @@
 	// -------------------------------------------------------- //
 	//Variables declaring the table details
 	var gvSchemaName = 'CDL_SCH_LOGGING';
-	var gvTable = 'CDL_PULSE_ALERT_CONFIG';
+	var gvTable = 'CDL_PULSE_ALERT_RECIPIENT';
 	var gvErrorMessage;
+
+	var gvRecipientEmail = $.request.parameters.get('recipientEmail');
 
 	// -------------------------------------------------------- // 
 	// Component Declarations                                   //
@@ -25,7 +28,8 @@
 		$.response.status = 200;
 		$.response.setBody(JSON.stringify({
 			message: "API Called",
-			result: "Only GET Operation is supported"
+			result: "Only GET Operation is supported, " +
+				"with parameters recipientEmail, optionally"
 		}));
 	}
 	// -------------------------------------------------------- // 
@@ -35,6 +39,11 @@
 		try {
 			//Variable to keep query statement 
 			var lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTable + '"';
+
+			//Check if RecipientEmail is used as restriction
+			if (gvRecipientEmail) {
+				lvQuery = lvQuery + ' WHERE "RECIPIENT_EMAIL" = ' + "'" + gvRecipientEmail + "'";
+			}
 
 			//Connect to the Database and execute the query
 			var oConnection = $.db.getConnection();
@@ -47,13 +56,14 @@
 			while (oResultSet.next()) {
 
 				var record = {
-					ID: oResultSet.getString(1),
-					HUB_INTEGRATION: oResultSet.getString(2),
-					ON_OFF: oResultSet.getString(3),
-					ALERT_TYPE: oResultSet.getString(4),
-					FREQUENCY: oResultSet.getString(5),
-					FREQUENCY_VALUE: oResultSet.getString(6),
-					ALERT_RETENTION_DAYS: oResultSet.getString(7)
+					RECIPIENT_ID: oResultSet.getString(1),
+					RECIPIENT_EMAIL: oResultSet.getString(2),
+					ALERT_TYPE: oResultSet.getString(3),
+					INTERFACE: oResultSet.getString(4),
+					EMAIL_HEADER: oResultSet.getString(5),
+					DATA_ERROR_ALERT: oResultSet.getString(6),
+					SAP_RESPONSE_ALERT: oResultSet.getString(7),
+					SAP_DELIVERY_ALERT: oResultSet.getString(8)
 				};
 
 				oResult.records.push(record);
@@ -89,7 +99,8 @@
 			$.response.status = 200;
 			$.response.setBody(JSON.stringify({
 				message: "API Called",
-				result: "Only GET Operation is supported, "
+				result: "Only GET Operation is supported, " +
+					"with parameters recipientEmail, optionally"
 			}));
 		} else if ($.request.method === $.net.http.GET) {
 			//Perform Read to get entries

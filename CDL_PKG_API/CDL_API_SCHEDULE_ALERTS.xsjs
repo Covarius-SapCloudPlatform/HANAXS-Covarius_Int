@@ -22,6 +22,7 @@
 
 	//Incoming Parameters
 	var gvFrequency = $.request.parameters.get('frequency'),
+		gvFrequencyValue = $.request.parameters.get('frequencyValue'),
 		gvMethod = $.request.parameters.get('method'); //Create, Delete
 
 	// -------------------------------------------------------- // 
@@ -46,9 +47,9 @@
 			uri: gvJobUri
 		});
 
-		//Create Schedules based on Frequency
-		if (gvFrequency) {
-			switch (gvFrequency) {
+		//Create Schedules based on Daily Frequency and Frequency Value
+		if (gvFrequency === "Daily") {
+			switch (gvFrequencyValue) {
 				case "1":
 					oJobId = oJob.schedules.add({
 						description: "Job to send out Pulse Alerts",
@@ -82,15 +83,108 @@
 						xscron: "* * * * 07 0 0"
 					});
 					break;
+				case "4":
+					oJobId = oJob.schedules.add({
+						description: "Job to send out Pulse Alerts",
+						xscron: "* * * * 18 0 0"
+					});
+
+					oJobId = oJob.schedules.add({
+						description: "Job to send out Pulse Alerts",
+						xscron: "* * * * 12 0 0"
+					});
+
+					oJobId = oJob.schedules.add({
+						description: "Job to send out Pulse Alerts",
+						xscron: "* * * * 08 0 0"
+					});
+
+					oJobId = oJob.schedules.add({
+						description: "Job to send out Pulse Alerts",
+						xscron: "* * * * 05 0 0"
+					});
+					break;
+				case "5":
+					oJobId = oJob.schedules.add({
+						description: "Job to send out Pulse Alerts",
+						xscron: "* * * * 18 0 0"
+					});
+
+					oJobId = oJob.schedules.add({
+						description: "Job to send out Pulse Alerts",
+						xscron: "* * * * 15 0 0"
+					});
+
+					oJobId = oJob.schedules.add({
+						description: "Job to send out Pulse Alerts",
+						xscron: "* * * * 12 0 0"
+					});
+
+					oJobId = oJob.schedules.add({
+						description: "Job to send out Pulse Alerts",
+						xscron: "* * * * 08 0 0"
+					});
+
+					oJobId = oJob.schedules.add({
+						description: "Job to send out Pulse Alerts",
+						xscron: "* * * * 05 0 0"
+					});
+					break;
 				default:
 					break;
 			}
-		} else {
+		}
+
+		//Create Schedules based on Weekly Frequency and Frequency Value
+		if (gvFrequency === "Weekly") {
+			//Monday
+			if (gvFrequencyValue.indexOf("Monday") !== -1) {
+				oJobId = oJob.schedules.add({
+					description: "Job to send out Pulse Alerts",
+					xscron: "* * * mon 17 0 0"
+				});
+			}
+			//Tuesday
+			if (gvFrequencyValue.indexOf("Tuesday") !== -1) {
+				oJobId = oJob.schedules.add({
+					description: "Job to send out Pulse Alerts",
+					xscron: "* * * tue 17 0 0"
+				});
+			}
+			//Wednesday
+			if (gvFrequencyValue.indexOf("Wednesday") !== -1) {
+				oJobId = oJob.schedules.add({
+					description: "Job to send out Pulse Alerts",
+					xscron: "* * * wed 17 0 0"
+				});
+			}
+			//Thursday
+			if (gvFrequencyValue.indexOf("Thursday") !== -1) {
+				oJobId = oJob.schedules.add({
+					description: "Job to send out Pulse Alerts",
+					xscron: "* * * thu 17 0 0"
+				});
+			}
+			//Friday
+			if (gvFrequencyValue.indexOf("Friday") !== -1) {
+				oJobId = oJob.schedules.add({
+					description: "Job to send out Pulse Alerts",
+					xscron: "* * * fri 17 0 0"
+				});
+			}
+		}
+
+		//Create Schedules based on Monthly Frequency and Frequency Value
+		if (gvFrequency === "Monthly") {
+			var lvDay = parseFloat(gvFrequencyValue);
+			var lvXscron = "* * " + lvDay + " * 17 0 0";
+
 			oJobId = oJob.schedules.add({
 				description: "Job to send out Pulse Alerts",
-				xscron: "* * * * 17 0 0"
+				xscron: lvXscron
 			});
 		}
+
 	}
 
 	// -------------------------------------------------------- // 
