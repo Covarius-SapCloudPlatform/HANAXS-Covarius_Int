@@ -9,8 +9,8 @@
 	// in the Accounting Category Table. POST method is allowed //
 	// you would need to get the x-csrf-token before doing the  //
 	// POST to the service. method paramter should be passed in //
-	// with either CREATE, DELETE, to indicate if entry is to   //
-	// be created or Deleted.                                   //
+	// with either CREATE, DELETE, UPDATE to indicate if entry  //
+	// is to be created, Deleted or Updated.                    //
 	//----------------------------------------------------------//
 
 	// -------------------------------------------------------- // 
@@ -26,6 +26,9 @@
 	//For Delete a method parameter with a value of 'DELETE' is passed in
 	var gvFunction = $.request.parameters.get('method');
 
+	//Variable for latest ID
+	var gvId;
+
 	// -------------------------------------------------------- // 
 	// Component Declarations                                   //
 	// -------------------------------------------------------- //
@@ -37,8 +40,39 @@
 			result: "GET is not supported, perform a POST to add Account Category/Type Entry"
 		}));
 	}
+	// -------------------------------------------------------- // 
+	// Function to get the latest ID                     //
+	// -------------------------------------------------------- //
+	function _getLastId() {
+		//Get the Connection to the Database
+		var conn = $.db.getConnection();
+
+		//Prepare the SQL Statement to read the entries
+		var pstmtSrcKeys = conn.prepareStatement(
+			"SELECT MAX(\"ID\") FROM \"" + gvSchemaName + "\".\"" + gvTableName + "\""
+		);
+
+		//Execute the Query
+		var rs = pstmtSrcKeys.executeQuery();
+
+		//Map and Save the results
+		while (rs.next()) {
+			gvId = rs.getString(1);
+			gvId = parseInt(gvId);
+		}
+		if (gvId) {
+			gvId = gvId + 1;
+		} else {
+			gvId = parseInt(1);
+		}
+
+		//Close the DB Connection
+		pstmtSrcKeys.close();
+		conn.close();
+	}
+
 	// ----------------------------------------------------------------// 
-	// Function to insert entries into the table for routing address   //
+	// Function to insert entries into the table                       //
 	// ----------------------------------------------------------------//
 	function _createEntry() {
 		try {
@@ -50,15 +84,17 @@
 
 			//Build the Statement to insert the entries
 			var oStatement = oConnection.prepareStatement('INSERT INTO "' + gvSchemaName + '"."' + gvTableName +
-				'" VALUES (?, ?, ?)');
+				'" VALUES (?, ?, ?, ?)');
 
 			//Populate the fields with values from the incoming payload
+			//ID
+			oStatement.setInt(1, gvId);
 			//Item Text
-			oStatement.setString(1, oBody.ITEM_TEXT);
+			oStatement.setString(2, oBody.ITEM_TEXT);
 			//Account Type
-			oStatement.setString(2, oBody.ACCOUNT_TYPE);
+			oStatement.setString(3, oBody.ACCOUNT_TYPE);
 			//Account Category
-			oStatement.setString(3, oBody.ACCOUNT_CATEGORY);
+			oStatement.setString(4, oBody.ACCOUNT_CATEGORY);
 
 			//Add Batch process to executed on the database
 			oStatement.addBatch();
@@ -85,7 +121,7 @@
 	}
 
 	// ----------------------------------------------------------------// 
-	// Function to delete entry from the table for routing address     //
+	// Function to delete entry from the table                         //
 	// ----------------------------------------------------------------//
 	function _deleteEntry() {
 		try {
@@ -96,10 +132,10 @@
 			var oConnection = $.db.getConnection();
 
 			//Build the Statement to delete the entries
-			var oStatement = oConnection.prepareStatement("DELETE FROM \"" + gvSchemaName + "\".\"" + gvTableName + "\" WHERE ITEM_TEXT = ?");
+			var oStatement = oConnection.prepareStatement("DELETE FROM \"" + gvSchemaName + "\".\"" + gvTableName + "\" WHERE ID = ?");
 
 			//Start Time
-			oStatement.setString(1, oBody.ITEM_TEXT);
+			oStatement.setString(1, oBody.ID);
 
 			oStatement.addBatch();
 
@@ -123,8 +159,58 @@
 			gvTableUpdate = "There was a problem deleting entry in the Account Type/Category Table, Error: " + errorObj.message;
 		}
 	}
+	// ----------------------------------------------------------------// 
+	// Function to update entries in the table                       //
+	// ----------------------------------------------------------------//
+	function _updateEntry() {
+		try {
+			//Get the Request Body
+			var oBody = JSON.parse($.request.body.asString());
+
+			//Get the Database connection
+			var oConnection = $.db.getConnection();
+
+			//Build the Statement to insert the entries
+			var oStatement = oConnection.prepareStatement(
+				"UPDATE \"" + gvSchemaName + "\".\"" + gvTableName +
+				"\" SET ITEM_TEXT = ?, ACCOUNT_TYPE = ?, ACCOUNT_CATEGORY = ? WHERE ID = ?");
+
+			//Populate the fields with values from the incoming payload
+			//Item Text
+			oStatement.setString(1, oBody.ITEM_TEXT);
+			//Account Type
+			oStatement.setString(2, oBody.ACCOUNT_TYPE);
+			//Account Category
+			oStatement.setString(3, oBody.ACCOUNT_CATEGORY);
+			//ID
+			oStatement.setInt(4, parseFloat(oBody.ID));
+
+			//Add Batch process to executed on the database
+			oStatement.addBatch();
+
+			//Execute the Insert
+			oStatement.executeBatch();
+
+			//Close the connection
+			oStatement.close();
+			oConnection.commit();
+			oConnection.close();
+
+			gvTableUpdate = "Table entries updated successfully in Account Type/Category Table;";
+
+		} catch (errorObj) {
+			if (oStatement !== null) {
+				oStatement.close();
+			}
+			if (oConnection !== null) {
+				oConnection.close();
+			}
+			gvTableUpdate = "There was a problem updating entries into the Account Type/Category Table, Error: " + errorObj.message;
+		}
+	}
+
 	// -------------------------------------------------------- // 
-	// Main function to add entries to the logging table        //
+	// Main function to add entries                             //
 	// -------------------------------------------------------- //
 	function main() {
 
@@ -143,9 +229,12 @@
 				} catch (errorObj) {
 					gvTableUpdate = "Error during table entry deletion:" + errorObj.message;
 				}
+			} else if (gvFunction === "UPDATE") {
+				_updateEntry();
 			} else {
 				//Perform Table Entry to be created in GL Routing Table
 				try {
+					_getLastId();
 					_createEntry();
 				} catch (errorObj) {
 					gvTableUpdate = "Error during table insert:" + errorObj.message;

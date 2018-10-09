@@ -38,7 +38,7 @@
 	function _getEntries() {
 		try {
 			//Variable to keep query statement 
-			var lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTable + '"';
+			var lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTable + '" ORDER BY "RECIPIENT_ID"';
 
 			//Check if RecipientEmail is used as restriction
 			if (gvRecipientEmail) {
