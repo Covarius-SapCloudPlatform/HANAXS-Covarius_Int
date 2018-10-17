@@ -6,7 +6,7 @@
 	// Company: Covarius                                        //
 	// Date: 2018-09-14                                         //
 	// Description: REST service to be able to read entries     //
-	// from the Pulse Configuration Table.                      //
+	// from the Pulse Error Codes Table.                        //
 	//----------------------------------------------------------//
 
 	// -------------------------------------------------------- // 
@@ -14,7 +14,7 @@
 	// -------------------------------------------------------- //
 	//Variables declaring the table details
 	var gvSchemaName = 'CDL_SCH_LOGGING';
-	var gvTable = 'CDL_PULSE_CONFIG';
+	var gvTable = 'CDL_PULSE_ERROR_CODES';
 	var gvErrorMessage;
 
 	// -------------------------------------------------------- // 
@@ -48,7 +48,11 @@
 
 				var record = {
 					ID: oResultSet.getString(1),
-					HUB_INTEGRATION_API: oResultSet.getString(2)
+					CDLE001: oResultSet.getString(2),
+					CDLE002: oResultSet.getString(3),
+					CDLE003: oResultSet.getString(4),
+					CDLE004: oResultSet.getString(5),
+					CDLS000: oResultSet.getString(6)
 				};
 
 				oResult.records.push(record);

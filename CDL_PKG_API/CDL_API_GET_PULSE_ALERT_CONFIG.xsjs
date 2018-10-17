@@ -53,7 +53,8 @@
 					ALERT_TYPE: oResultSet.getString(4),
 					FREQUENCY: oResultSet.getString(5),
 					FREQUENCY_VALUE: oResultSet.getString(6),
-					ALERT_RETENTION_DAYS: oResultSet.getString(7)
+					ALERT_RETENTION_DAYS: oResultSet.getString(7),
+					PORTAL_NOTIFICATION: oResultSet.getString(8)
 				};
 
 				oResult.records.push(record);

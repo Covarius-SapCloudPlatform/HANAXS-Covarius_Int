@@ -16,12 +16,15 @@
 	// -------------------------------------------------------- //
 	//Variable to carry the table update status
 	var gvTableUpdate,
-	    gvStatus;
+		gvStatus;
 	//Variable to carry the conversion errors
 	var gvConvError;
 	//Variables declaring the table details
 	var gvSchemaName = 'CDL_SCH_LOGGING';
 	var gvTableName = 'CDL_PULSE_ALERT_CONFIG';
+
+	//Alert Configuration ID
+	var gvAlertId;
 
 	// -------------------------------------------------------- // 
 	// Component Declarations                                   //
@@ -34,6 +37,38 @@
 			result: "GET is not supported, perform a POST to update entry in Pulse Alert Config Table"
 		}));
 	}
+
+	// -------------------------------------------------------- // 
+	// Function to get the latest Alert ID                     //
+	// -------------------------------------------------------- //
+	function _getLastAlertId() {
+		//Get the Connection to the Database
+		var conn = $.db.getConnection();
+
+		//Prepare the SQL Statement to read the entries
+		var pstmtSrcKeys = conn.prepareStatement(
+			"SELECT MAX(\"ID\") FROM \"" + gvSchemaName + "\".\"" + gvTableName + "\""
+		);
+
+		//Execute the Query
+		var rs = pstmtSrcKeys.executeQuery();
+
+		//Map and Save the results
+		while (rs.next()) {
+			gvAlertId = rs.getString(1);
+			gvAlertId = parseInt(gvAlertId);
+		}
+		if (gvAlertId) {
+			gvAlertId = gvAlertId + 1;
+		} else {
+			gvAlertId = parseInt(1);
+		}
+
+		//Close the DB Connection
+		pstmtSrcKeys.close();
+		conn.close();
+	}
+
 	// ----------------------------------------------------------------// 
 	// Function to insert entries into the table                       //
 	// ----------------------------------------------------------------//
@@ -45,11 +80,11 @@
 			//Get the Database connection
 			var oConnection = $.db.getConnection();
 
-			if (oBody.ID) {
+			if (oBody.ID || gvAlertId) {
 				//Build the Statement to update the entries
 				var oStatement = oConnection.prepareStatement(
 					"UPDATE \"" + gvSchemaName + "\".\"" + gvTableName +
-					"\" SET HUB_INTEGRATION = ?, ON_OFF = ?, ALERT_TYPE = ?, FREQUENCY = ?, FREQUENCY_VALUE = ?, ALERT_RETENTION_DAYS = ? WHERE ID = ?");
+					"\" SET HUB_INTEGRATION = ?, ON_OFF = ?, ALERT_TYPE = ?, FREQUENCY = ?, FREQUENCY_VALUE = ?, ALERT_RETENTION_DAYS = ?, PORTAL_NOTIFICATION = ? WHERE ID = ?");
 
 				//Populate the fields with values from the incoming payload
 				//Hub Integration
@@ -64,12 +99,18 @@
 				oStatement.setString(5, oBody.FREQUENCY_VALUE);
 				//Alert Retention Days
 				oStatement.setInt(6, parseFloat(oBody.ALERT_RETENTION_DAYS));
+				//Portal Notification
+				oStatement.setString(7, oBody.PORTAL_NOTIFICATION);
 				//ID
-				oStatement.setInt(7, parseFloat(oBody.ID));
+				if (oBody.ID) {
+					oStatement.setInt(8, parseFloat(oBody.ID));
+				} else {
+					oStatement.setInt(8, parseFloat(gvAlertId));
+				}
 			} else {
 				//Build the Statement to insert the entries
 				var oStatement = oConnection.prepareStatement('INSERT INTO "' + gvSchemaName + '"."' + gvTableName +
-					'" VALUES (?, ?, ?, ?, ?, ?, ?)');
+					'" VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
 
 				//Populate the fields with values from the incoming payload
 				//ID
@@ -86,6 +127,8 @@
 				oStatement.setString(6, oBody.FREQUENCY_VALUE);
 				//Alert Retention Days
 				oStatement.setInt(7, parseFloat(oBody.ALERT_RETENTION_DAYS));
+				//Portal Notification
+				oStatement.setString(8, oBody.PORTAL_NOTIFICATION);
 			}
 			//Add Batch process to executed on the database
 			oStatement.addBatch();
@@ -99,7 +142,7 @@
 			oConnection.close();
 
 			gvTableUpdate = "Table entries updated successfully in Pulse Alert Config Table;";
-            gvStatus = "Success";
+			gvStatus = "Success";
 		} catch (errorObj) {
 			if (oStatement !== null) {
 				oStatement.close();
@@ -127,6 +170,7 @@
 		} else {
 			//Perform Table Entry to be updated
 			try {
+				_getLastAlertId();
 				_updateEntry();
 			} catch (errorObj) {
 				gvTableUpdate = "Error during table update:" + errorObj.message;
@@ -136,7 +180,7 @@
 			$.response.setBody(JSON.stringify({
 				message: "API Called",
 				TableUpdateMessage: gvTableUpdate,
-				Status:gvStatus
+				Status: gvStatus
 			}));
 		}
 	}

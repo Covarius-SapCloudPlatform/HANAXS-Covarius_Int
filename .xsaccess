@@ -39,6 +39,14 @@
            "target": "/CDL_PKG_API/CDL_API_GET_GL_ROUTING.xsjs/$1"
     },
     {
+           "source": "/CDL_PKG_API/CDL_API_POST_NOTIFICATION_ROUTE/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_POST_NOTIFICATION_ROUTE.xsjs/$1"
+    },
+         {
+           "source": "/CDL_PKG_API/CDL_API_GET_NOTIFICATION_ROUTE/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_NOTIFICATION_ROUTE.xsjs/$1"
+    },
+    {
            "source": "/CDL_PKG_API/CDL_API_GET_GL_HEADER/(.*)",
            "target": "/CDL_PKG_API/CDL_API_GET_GL_HEADER.xsjs/$1"
     },
@@ -69,6 +77,13 @@
         {
            "source": "/CDL_PKG_API/CDL_API_GET_PULSE_ALERT_CONFIG/(.*)",
            "target": "/CDL_PKG_API/CDL_API_GET_PULSE_ALERT_CONFIG.xsjs/$1"
+    },{
+           "source": "/CDL_PKG_API/CDL_API_GET_PULSE_CONFIG/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_PULSE_CONFIG.xsjs/$1"
+    },
+    {
+           "source": "/CDL_PKG_API/CDL_API_GET_PULSE_ERROR_CODES/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_PULSE_ERROR_CODES.xsjs/$1"
     },
             {
            "source": "/CDL_PKG_API/CDL_API_GET_PULSE_ALERT_RECIPIENT/(.*)",
@@ -81,6 +96,12 @@
         {
            "source": "/CDL_PKG_API/CDL_API_POST_PULSE_ALERT_CONFIG/(.*)",
            "target": "/CDL_PKG_API/CDL_API_POST_PULSE_ALERT_CONFIG.xsjs/$1"
+    }, {
+           "source": "/CDL_PKG_API/CDL_API_POST_PULSE_ERROR_CODES/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_POST_PULSE_ERROR_CODES.xsjs/$1"
+    }, {
+           "source": "/CDL_PKG_API/CDL_API_POST_PULSE_CONFIG/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_POST_PULSE_CONFIG.xsjs/$1"
     },
     {
            "source": "/CDL_PKG_API/CDL_API_POST_PULSE_ALERT_RECIPIENT/(.*)",

@@ -4,9 +4,10 @@
 	// -------------------------------------------------------- //
 	// Author: Jacques Otto                                     //
 	// Company: Covarius                                        //
-	// Date: 2018-09-14                                         //
+	// Date: 2018-08-13                                         //
 	// Description: REST service to be able to read entries     //
-	// from the Pulse Configuration Table.                      //
+	// from the Notification Routing Table.  Allowing filters   //
+	// on the companyCode to be passed in as parameters.        //
 	//----------------------------------------------------------//
 
 	// -------------------------------------------------------- // 
@@ -14,9 +15,10 @@
 	// -------------------------------------------------------- //
 	//Variables declaring the table details
 	var gvSchemaName = 'CDL_SCH_LOGGING';
-	var gvTable = 'CDL_PULSE_CONFIG';
+	var gvTableName = 'CDL_NOTIFICATION_ROUTING';
 	var gvErrorMessage;
-
+	
+	var gvCompanyCode = $.request.parameters.get('companyCode');
 	// -------------------------------------------------------- // 
 	// Component Declarations                                   //
 	// -------------------------------------------------------- //
@@ -25,7 +27,8 @@
 		$.response.status = 200;
 		$.response.setBody(JSON.stringify({
 			message: "API Called",
-			result: "Only GET Operation is supported"
+			result: "Only GET Operation is supported, " +
+				"with parameters companyCode or no restriction to return all entries"
 		}));
 	}
 	// -------------------------------------------------------- // 
@@ -34,8 +37,17 @@
 	function _getEntries() {
 		try {
 			//Variable to keep query statement 
-			var lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTable + '"';
-
+			var lvQuery;
+            
+            if(gvCompanyCode)
+            {
+                lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTableName + '"' + ' WHERE COMPANY_CODE =' + "'" + gvCompanyCode + "'";
+            }
+            else
+            {
+                lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTableName + '"';
+            }
+            
 			//Connect to the Database and execute the query
 			var oConnection = $.db.getConnection();
 			var oStatement = oConnection.prepareStatement(lvQuery);
@@ -47,12 +59,12 @@
 			while (oResultSet.next()) {
 
 				var record = {
-					ID: oResultSet.getString(1),
-					HUB_INTEGRATION_API: oResultSet.getString(2)
+					COMPANY_CODE: oResultSet.getString(1),
+					ODATA_URL: oResultSet.getString(2)
 				};
 
 				oResult.records.push(record);
-
+				record = "";
 			}
 			oResultSet.close();
 			oStatement.close();
@@ -75,19 +87,19 @@
 	}
 
 	// -------------------------------------------------------- // 
-	// Main function to read entries from table                 //
+	// Main function to read entries                            //
 	// -------------------------------------------------------- //
 	function main() {
-
 		//Check the Method
 		if ($.request.method !== $.net.http.GET) {
 			$.response.status = 200;
 			$.response.setBody(JSON.stringify({
 				message: "API Called",
-				result: "Only GET Operation is supported, "
+			    result: "Only GET Operation is supported, " +
+				"with parameters companyCode or no restriction to return all entries"
 			}));
 		} else if ($.request.method === $.net.http.GET) {
-			//Perform Read to get entries
+			//Perform Table Entry to be created in Logging Table
 			try {
 				_getEntries();
 			} catch (errorObj) {

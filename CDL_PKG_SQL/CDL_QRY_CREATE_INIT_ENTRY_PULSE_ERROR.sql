@@ -1,0 +1,1 @@
+INSERT INTO "CDL_SCH_LOGGING"."CDL_PULSE_ERROR_CODES" VALUES ('1','Error During Creation on SAP','Communication Error from CDL to SAP','Communication Error from SAP to CDL','Communication Error from CDL to Third Party','Successful Creation')
