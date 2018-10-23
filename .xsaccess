@@ -110,6 +110,10 @@
      {
            "source": "/CDL_PKG_API/CDL_API_SCHEDULE_ALERTS/(.*)",
            "target": "/CDL_PKG_API/CDL_API_SCHEDULE_ALERTS.xsjs/$1"
+    },
+      {
+           "source": "/CDL_PKG_API/CDL_API_SCHEDULE_NOTIFICATIONS/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_SCHEDULE_NOTIFICATIONS.xsjs/$1"
     }],
     "cache_control" : "private, no-cache, no-store, must-revalidate"
 }

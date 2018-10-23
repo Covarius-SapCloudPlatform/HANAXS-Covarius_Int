@@ -1,0 +1,8 @@
+description = "HCI Tenant Notification Process";
+host = "p2011-iflmap.hcisbp.eu1.hana.ondemand.com";
+port = 443;
+pathPrefix = "/http/cdl_portal_notification";
+authType = basic;
+useSSL = true;
+timeout = 0;
+sslAuth = anonymous;
