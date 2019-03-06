@@ -10,7 +10,8 @@
 	// you would need to get the x-csrf-token before doing the  //
 	// POST to the service. method paramter should be passed in //
 	// with either CREATE, DELETE, to indicate if entry is to   //
-	// be created or Deleted.                                   //
+	// be created or Deleted.  This API also supports the GET   //
+	// operation in order to read entries from the table.       //
 	//----------------------------------------------------------//
 
 	// -------------------------------------------------------- // 
@@ -26,18 +27,117 @@
 	var gvTableName = 'CDL_NOTIFICATION_ROUTING';
 	//For Delete a method parameter with a value of 'DELETE' is passed in
 	var gvFunction = $.request.parameters.get('method');
+	var gvErrorMessage;
+
+	var gvCompanyCode = $.request.parameters.get('companyCode');
 
 	// -------------------------------------------------------- // 
-	// Component Declarations                                   //
+	// Execute Main Function                                    //
 	// -------------------------------------------------------- //
-	//Check the Method
-	if ($.request.method === $.net.http.GET) {
-		$.response.status = 200;
-		$.response.setBody(JSON.stringify({
-			message: "API Called",
-			result: "GET is not supported, perform a POST to add GL Routing Entry"
-		}));
+	main();
+
+	// -------------------------------------------------------- // 
+	// Main function to add entries to the logging table        //
+	// -------------------------------------------------------- //
+	function main() {
+
+		//Check the Method
+		if ($.request.method === $.net.http.GET) {
+			//Perform Table Entry to be created in Logging Table
+			try {
+				_getEntries();
+			} catch (errorObj) {
+				$.response.status = 200;
+				$.response.setBody(JSON.stringify({
+					message: "API Called",
+					result: gvErrorMessage
+				}));
+			}
+		} else if ($.request.method === $.net.http.POST){
+			if (gvFunction === "DELETE") {
+				//Perform Table Entry to be deleted from GL Routing Table
+				try {
+					_deleteRoutingEntry();
+				} catch (errorObj) {
+					gvTableUpdate = "Error during table entry deletion:" + errorObj.message;
+				}
+			} else if (gvFunction === "UPDATE") {
+				try {
+					_updateEntry();
+				} catch (errorObj) {
+					gvTableUpdate = "Error during table update:" + errorObj.message;
+				}
+			} else {
+				//Perform Table Entry to be created in GL Routing Table
+				try {
+					_createRoutingEntry();
+				} catch (errorObj) {
+					gvTableUpdate = "Error during table insert:" + errorObj.message;
+				}
+			}
+
+			$.response.status = 200;
+			$.response.setBody(JSON.stringify({
+				message: "API Called",
+				TableUpdateStatus: gvTableUpdate,
+				Status: gvStatus
+			}));
+		}
 	}
+	// -------------------------------------------------------- // 
+	// Function to read entries from the table 				    //
+	// -------------------------------------------------------- //
+	function _getEntries() {
+		try {
+			//Variable to keep query statement 
+			var lvQuery;
+
+			if (gvCompanyCode) {
+				lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTableName + '"' + ' WHERE COMPANY_CODE =' + "'" + gvCompanyCode + "'";
+			} else {
+				lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTableName + '"';
+			}
+
+			//Connect to the Database and execute the query
+			var oConnection = $.db.getConnection();
+			var oStatement = oConnection.prepareStatement(lvQuery);
+			oStatement.execute();
+			var oResultSet = oStatement.getResultSet();
+			var oResult = {
+				records: []
+			};
+			while (oResultSet.next()) {
+
+				var record = {
+					COMPANY_CODE: oResultSet.getString(1),
+					ODATA_URL: oResultSet.getString(2),
+					SYSTEM: oResultSet.getString(3),
+					CLIENT: oResultSet.getString(4)
+				};
+
+				oResult.records.push(record);
+				record = "";
+			}
+			oResultSet.close();
+			oStatement.close();
+			oConnection.close();
+
+			//Return the result
+			$.response.contentType = "application/json; charset=UTF-8";
+			$.response.setBody(JSON.stringify(oResult));
+			$.response.status = $.net.http.OK;
+
+		} catch (errorObj) {
+			gvErrorMessage = errorObj.message;
+			if (oStatement !== null) {
+				oStatement.close();
+			}
+			if (oConnection !== null) {
+				oConnection.close();
+			}
+		}
+	}
+
 	// ----------------------------------------------------------------// 
 	// Function to insert entries into the table for routing address   //
 	// ----------------------------------------------------------------//
@@ -180,53 +280,5 @@
 			gvStatus = "Error";
 		}
 	}
-	// -------------------------------------------------------- // 
-	// Main function to add entries to the logging table        //
-	// -------------------------------------------------------- //
-	function main() {
-
-		//Check the Method
-		if ($.request.method === $.net.http.GET) {
-			$.response.status = 200;
-			$.response.setBody(JSON.stringify({
-				message: "API Called",
-				result: "GET is not supported, perform a POST to add Notification Routing Entries"
-			}));
-		} else {
-			if (gvFunction === "DELETE") {
-				//Perform Table Entry to be deleted from GL Routing Table
-				try {
-					_deleteRoutingEntry();
-				} catch (errorObj) {
-					gvTableUpdate = "Error during table entry deletion:" + errorObj.message;
-				}
-			} else if (gvFunction === "UPDATE") {
-				try {
-					_updateEntry();
-				} catch (errorObj) {
-					gvTableUpdate = "Error during table update:" + errorObj.message;
-				}
-			} else {
-				//Perform Table Entry to be created in GL Routing Table
-				try {
-					_createRoutingEntry();
-				} catch (errorObj) {
-					gvTableUpdate = "Error during table insert:" + errorObj.message;
-				}
-			}
-
-			$.response.status = 200;
-			$.response.setBody(JSON.stringify({
-				message: "API Called",
-				TableUpdateStatus: gvTableUpdate,
-				Status: gvStatus
-			}));
-		}
-	}
-
-	// -------------------------------------------------------- // 
-	// Execute Main Function                                    //
-	// -------------------------------------------------------- //
-	main();
 
 })();

@@ -60,7 +60,9 @@
 
 				var record = {
 					COMPANY_CODE: oResultSet.getString(1),
-					ODATA_URL: oResultSet.getString(2)
+					ODATA_URL: oResultSet.getString(2),
+					SYSTEM: oResultSet.getString(3),
+					CLIENT: oResultSet.getString(4)
 				};
 
 				oResult.records.push(record);

@@ -56,9 +56,10 @@
 			while (oResultSet.next()) {
 
 				var record = {
-					ITEM_TEXT: oResultSet.getString(1),
-					ACCOUNT_TYPE: oResultSet.getString(2),
-					ACCOUNT_CATEGORY: oResultSet.getString(3)
+				    ID: oResultSet.getString(1),
+					ITEM_TEXT: oResultSet.getString(2),
+					ACCOUNT_TYPE: oResultSet.getString(3),
+					ACCOUNT_CATEGORY: oResultSet.getString(4)
 				};
 
 				oResult.records.push(record);

@@ -1,0 +1,10 @@
+{
+    "description": "Job to send out Portal Notifications",
+    "action": "CDL_PKG_LOGGING.CDL_PKG_JOB:CDL_JOB_NOTIFICATIONS.xsjs::execute",
+    "schedules": [
+ {
+          "description": "Job to send out Portal Notifications Daily",
+          "xscron": "* * * * 17 0 0"
+       }
+    ]
+}

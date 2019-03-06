@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="CDL_CV_GL_MASTER" applyPrivilegeType="ANALYTIC_PRIVILEGE" dataCategory="CUBE" schemaVersion="2.3" defaultClient="$$client$$" visibility="reportingEnabled" outputViewType="Aggregation" calculationScenarioType="TREE_BASED" enforceSqlExecution="false">
+<descriptions defaultDescription="Calculation View of GL Master"/>
+<localVariables/>
+<variableMappings/>
+<dataSources>
+  <DataSource id="CDL_GL_MASTER" type="DATA_BASE_TABLE">
+    <viewAttributes allViewAttributes="true"/>
+    <columnObject schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_MASTER"/>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="CDL_GL_MASTER">
+  <attributes>
+    <attribute id="COMPANY_CODE" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="COMPANY_CODE"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_MASTER" columnName="COMPANY_CODE"/>
+    </attribute>
+    <attribute id="DIRECTION" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DIRECTION"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_MASTER" columnName="DIRECTION"/>
+    </attribute>
+    <attribute id="FISCAL_YEAR" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="FISCAL_YEAR"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_MASTER" columnName="FISCAL_YEAR"/>
+    </attribute>
+    <attribute id="MESSAGE_GUID" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="MESSAGE_GUID"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_MASTER" columnName="MESSAGE_GUID"/>
+    </attribute>
+    <attribute id="REFERENCE_DOCUMENT" order="6" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="REFERENCE_DOCUMENT"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_MASTER" columnName="REFERENCE_DOCUMENT"/>
+    </attribute>
+    <attribute id="SAP_DOCUMENT" order="7" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="SAP_DOCUMENT"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_MASTER" columnName="SAP_DOCUMENT"/>
+    </attribute>
+    <attribute id="STATUS" order="8" displayAttribute="false" attributeHierarchyActive="false" key="true">
+      <descriptions defaultDescription="STATUS"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_MASTER" columnName="STATUS"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures>
+    <measure id="DATE" order="2" aggregationType="min" measureType="simple">
+      <descriptions defaultDescription="DATE"/>
+      <measureMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_MASTER" columnName="DATE"/>
+    </measure>
+  </baseMeasures>
+  <calculatedMeasures>
+    <measure id="NoEntries" hidden="false" order="9" aggregationType="sum" measureType="simple" calculatedMeasureType="counter" aggregatable="true" datatype="INTEGER">
+      <descriptions defaultDescription="NoEntries"/>
+      <exceptionAggregation>
+        <attribute attributeName="STATUS"/>
+      </exceptionAggregation>
+      <formula>1</formula>
+    </measure>
+  </calculatedMeasures>
+  <restrictedMeasures/>
+  <localDimensions/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

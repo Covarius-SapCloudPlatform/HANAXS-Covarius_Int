@@ -14,6 +14,8 @@
 	// -------------------------------------------------------- // 
 	// Global Variables                                         //
 	// -------------------------------------------------------- //
+	var gvMethod = $.request.parameters.get('method');
+
 	//Variable to carry the table update status
 	var gvTableUpdate;
 	//Variable to carry the conversion errors
@@ -21,10 +23,26 @@
 	//Variables declaring the table details
 	var gvSchemaName = 'CDL_SCH_LOGGING';
 	var gvTableName = 'CDL_PULSE_LOG_MASTER';
-	var gvHeaderTable = 'CDL_GL_HEADER';
-	var gvItemTable = 'CDL_GL_ITEM';
-	var gvCurrencyTable = 'CDL_GL_CURRENCY';
-	var gvForecastMaster = 'CDL_GL_FORECAST_MASTER';
+	var gvGLSchemaName = 'COV_SCH_GL_BRIDGE';
+	var gvGLHeaderName = 'COV_IN_JOURNAL_HEADER';
+
+	// 	var gvHeaderTable = 'CDL_GL_HEADER';
+	// 	var gvItemTable = 'CDL_GL_ITEM';
+	// 	var gvCurrencyTable = 'CDL_GL_CURRENCY';
+	// 	var gvForecastMaster = 'CDL_GL_FORECAST_MASTER';
+
+	//Get the Message Guid from HTTP Header
+	var gvGuid;
+
+	for (var i = 0; i < $.request.headers.length; ++i) {
+		var lvName = $.request.headers[i].name;
+		var lvValue = $.request.headers[i].value;
+
+		if (lvName === "MESSAGEGUID" || lvName === "messageguid" || lvName === "MessageGuid") {
+			gvGuid = lvValue;
+			break;
+		}
+	}
 
 	// -------------------------------------------------------- // 
 	// Component Declarations                                   //
@@ -105,22 +123,28 @@
 			//Interface
 			oStatement.setString(14, oBody.INTERFACE);
 			//Status Code
-			if (response) {
-				if (response.StatusCode) {
-					oStatement.setString(15, response.StatusCode);
-					//Status Message
-					oStatement.setString(16, response.StatusMessage);
+			if (oBody.STATUS_CODE) {
+				oStatement.setString(15, oBody.STATUS_CODE);
+				//Status Message
+				oStatement.setString(16, oBody.STATUS_MESSAGE);
+			} else {
+				if (response) {
+					if (response.StatusCode) {
+						oStatement.setString(15, response.StatusCode);
+						//Status Message
+						oStatement.setString(16, response.StatusMessage);
+					} else {
+						statusCode = "CDL-E002";
+						statusMessage = "Error occured during processing";
+						oStatement.setString(15, statusCode);
+						oStatement.setString(16, statusMessage);
+					}
 				} else {
 					statusCode = "CDL-E002";
-					statusMessage = "Communication Error from CDL to SAP";
+					statusMessage = "Error occured during processing, Investigate using IntegrationMessageId on Pulse :";
 					oStatement.setString(15, statusCode);
 					oStatement.setString(16, statusMessage);
 				}
-			} else {
-				statusCode = "CDL-E002";
-				statusMessage = "Communication Error from CDL to SAP, Investigate using CDLIntegrationMessageId on Covarius Data Lake Pulse :";
-				oStatement.setString(15, statusCode);
-				oStatement.setString(16, statusMessage);
 			}
 
 			//Add Batch process to executed on the database
@@ -146,6 +170,163 @@
 			gvTableUpdate = "There was a problem inserting entries into the logging table, Error: " + errorObj.message;
 		}
 	}
+
+	// ----------------------------------------------------------------// 
+	// Function to update entries in the table for integration event   //
+	// ----------------------------------------------------------------//
+	function _updateLogEntry(pGuid) {
+		if (pGuid) {
+			try {
+				//Get the Request Body
+				var oBody = JSON.parse($.request.body.asString());
+				var requestPayload = oBody.PAYLOAD_REQUEST;
+				var responsePayload = oBody.PAYLOAD_RESPONSE;
+				var statusCode,
+					statusMessage;
+
+				requestPayload = requestPayload.replace("\\", "");
+				if (requestPayload) {
+					try {
+						var request = JSON.parse(requestPayload);
+					} catch (convError) {
+						gvConvError = convError.message;
+					}
+				}
+				responsePayload = responsePayload.replace("\\", "");
+				responsePayload = responsePayload.replace("\n", "");
+				if (responsePayload) {
+					try {
+						var response = JSON.parse(responsePayload);
+					} catch (convError) {
+						gvConvError += convError.message;
+					}
+				}
+
+				//Get the Database connection
+				var oConnection = $.db.getConnection();
+
+				//Build the Statement to update the entry
+				var oStatement = oConnection.prepareStatement(
+					"UPDATE \"" + gvSchemaName + "\".\"" + gvTableName +
+					"\" SET STATUS = ?, STATUS_CODE = ?, STATUS_MESSAGE = ?, OBJECT_KEY = ?, END_TIME = ?  WHERE MESSAGE_GUID = ?"
+				);
+				//PAYLOAD_REQUEST = ?, PAYLOAD_RESPONSE = ?, 
+
+				//Status
+				oStatement.setString(1, oBody.STATUS);
+				// //Payload Request
+				// oStatement.setString(2, oBody.PAYLOAD_REQUEST);
+				// //Payload Response
+				// //var response = JSON.stringify(body.PAYLOAD_RESPONSE);
+				// oStatement.setString(3, oBody.PAYLOAD_RESPONSE);
+				//Status Code
+				if (oBody.STATUS_CODE) {
+					oStatement.setString(2, oBody.STATUS_CODE);
+					//Status Message
+					oStatement.setString(3, oBody.STATUS_MESSAGE);
+				} else {
+					if (response) {
+						if (response.StatusCode) {
+							oStatement.setString(2, response.StatusCode);
+							//Status Message
+							oStatement.setString(3, response.StatusMessage);
+						} else {
+							statusCode = "CDL-E002";
+							statusMessage = "Error occured during processing";
+							oStatement.setString(2, statusCode);
+							oStatement.setString(3, statusMessage);
+						}
+					} else {
+						statusCode = "CDL-E002";
+						statusMessage = "Error occured during processing, Investigate using IntegrationMessageId on Pulse :";
+						oStatement.setString(2, statusCode);
+						oStatement.setString(3, statusMessage);
+					}
+				}
+				//Object Key
+				oStatement.setString(4, oBody.OBJECT_KEY);
+				//End Time
+				oStatement.setString(5, oBody.END_TIME);
+				//Message GUID
+				oStatement.setString(6, oBody.MESSAGE_GUID);
+
+				//Add Batch process to executed on the database
+				oStatement.addBatch();
+
+				//Execute the Insert
+				oStatement.executeBatch();
+
+				//Close the connection
+				oStatement.close();
+				oConnection.commit();
+				oConnection.close();
+
+				gvTableUpdate = "Table entries updated successfully in logging table;";
+
+			} catch (errorObj) {
+				if (oStatement !== null) {
+					oStatement.close();
+				}
+				if (oConnection !== null) {
+					oConnection.close();
+				}
+				gvTableUpdate = "There was a problem updating entries into the logging table, Error: " + errorObj.message;
+			}
+		}
+	}
+
+	// ------------------------------------------------------------- // 
+	// Function to retrieve the original guid for reprocess update   //
+	// ------------------------------------------------------------- //
+	function _getOriginalGuid() {
+		var lsJournal;
+
+		try {
+			var oBody = JSON.parse($.request.body.asString());
+			var lvJournal = oBody.REFERENCE_DOCUMENT;
+
+			//Variable to keep query statement 
+			var lvQuery =
+				'SELECT "MESSAGE_GUID", "JOURNAL_REF"';
+			lvQuery = lvQuery + 'FROM "' + gvGLSchemaName + '"."' + gvGLHeaderName + '"';
+			lvQuery = lvQuery + 'WHERE "JOURNAL_REF" = ' + "'" + lvJournal + "'";
+
+			//Connect to the Database and execute the query
+			var oConnection = $.db.getConnection();
+			var oStatement = oConnection.prepareStatement(lvQuery);
+			oStatement.execute();
+			var oResultSet = oStatement.getResultSet();
+			var oResult = {
+				records: []
+			};
+			while (oResultSet.next()) {
+
+				var record = {
+					MESSAGE_GUID: oResultSet.getString(1),
+					JOURNAL_REF: oResultSet.getString(2)
+				};
+
+				lsJournal = record;
+				oResult.records.push(record);
+				record = "";
+
+			}
+			oResultSet.close();
+			oStatement.close();
+			oConnection.close();
+
+			return lsJournal;
+
+		} catch (errorObj) {
+			if (oStatement !== null) {
+				oStatement.close();
+			}
+			if (oConnection !== null) {
+				oConnection.close();
+			}
+		}
+	}
+
 	// ------------------------------------------------------------- // 
 	// Function to delete entries in logging table older than 30 days//
 	// ------------------------------------------------------------- //
@@ -664,6 +845,159 @@
 			gvTableUpdate += ",There was a problem deleting entries in the " + tableName + " table, Error: " + errorObj.message;
 		}
 	}
+
+	// ------------------------------------------------------------- // 
+	// Function to delete the log entry to create a new one          //
+	// ------------------------------------------------------------- //
+	function _deleteLogEntry(pGuid) {
+		try {
+			//Get the Database connection
+			var oConnection = $.db.getConnection();
+
+			//Build the Statement to delete the entries
+			var oStatement = oConnection.prepareStatement("DELETE FROM \"" + gvSchemaName + "\".\"" + gvTableName + "\" WHERE MESSAGE_GUID = ?");
+
+			//Entry Date
+			oStatement.setString(1, pGuid);
+
+			oStatement.addBatch();
+
+			//Execute the Insert
+			oStatement.executeBatch();
+
+			//Close the connection
+			oStatement.close();
+			oConnection.commit();
+			oConnection.close();
+
+			gvTableUpdate += "Table entries deleted for update " + gvTableName + ";";
+
+		} catch (errorObj) {
+			if (oStatement !== null) {
+				oStatement.close();
+			}
+			if (oConnection !== null) {
+				oConnection.close();
+			}
+			gvTableUpdate += ",There was a problem deleting entries in the " + gvTableName + " table, Error: " + errorObj.message;
+		}
+	}
+
+	// ----------------------------------------------------------------// 
+	// Function to insert entries into the table for integration update //
+	// ----------------------------------------------------------------//
+	function _createLogEntryUpdate(pGuid) {
+		try {
+			//Get the Request Body
+			var oBody = JSON.parse($.request.body.asString());
+			var requestPayload = oBody.PAYLOAD_REQUEST;
+			var responsePayload = oBody.PAYLOAD_RESPONSE;
+			var statusCode,
+				statusMessage;
+
+			requestPayload = requestPayload.replace("\\", "");
+			if (requestPayload) {
+				try {
+					var request = JSON.parse(requestPayload);
+				} catch (convError) {
+					gvConvError = convError.message;
+				}
+			}
+			responsePayload = responsePayload.replace("\\", "");
+			responsePayload = responsePayload.replace("\n", "");
+			if (responsePayload) {
+				try {
+					var response = JSON.parse(responsePayload);
+				} catch (convError) {
+					gvConvError += convError.message;
+				}
+			}
+
+			//Get the Database connection
+			var oConnection = $.db.getConnection();
+
+			//Build the Statement to insert the entries
+			var oStatement = oConnection.prepareStatement('INSERT INTO "' + gvSchemaName + '"."' + gvTableName +
+				'" VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+
+			//Populate the fields with values from the incoming payload
+			//Message GUID
+			oStatement.setString(1, pGuid);
+			//Start Time
+			oStatement.setString(2, oBody.START_TIME);
+			//End Time
+			oStatement.setString(3, oBody.END_TIME);
+			//Status
+			oStatement.setString(4, oBody.STATUS);
+			//Payload Request
+			oStatement.setString(5, oBody.PAYLOAD_REQUEST);
+			//Payload Response
+			//var response = JSON.stringify(body.PAYLOAD_RESPONSE);
+			oStatement.setString(6, oBody.PAYLOAD_RESPONSE);
+			//Object Key
+			oStatement.setString(7, oBody.OBJECT_KEY);
+			//Method
+			oStatement.setString(8, oBody.METHOD);
+			//Direction
+			oStatement.setString(9, oBody.DIRECTION);
+			//Source System ID
+			oStatement.setString(10, oBody.SOURCE_SYS_ID);
+			//Source System Area
+			oStatement.setString(11, oBody.SOURCE_SYS_AREA);
+			//Target System ID
+			oStatement.setString(12, oBody.TARGET_SYS_ID);
+			//Target System Area
+			oStatement.setString(13, oBody.TARGET_SYS_AREA);
+			//Interface
+			oStatement.setString(14, oBody.INTERFACE);
+			//Status Code
+			if (oBody.STATUS_CODE) {
+				oStatement.setString(15, oBody.STATUS_CODE);
+				//Status Message
+				oStatement.setString(16, oBody.STATUS_MESSAGE);
+			} else {
+				if (response) {
+					if (response.StatusCode) {
+						oStatement.setString(15, response.StatusCode);
+						//Status Message
+						oStatement.setString(16, response.StatusMessage);
+					} else {
+						statusCode = "CDL-E002";
+						statusMessage = "Error occured during processing";
+						oStatement.setString(15, statusCode);
+						oStatement.setString(16, statusMessage);
+					}
+				} else {
+					statusCode = "CDL-E002";
+					statusMessage = "Error occured during processing, Investigate using IntegrationMessageId on Pulse :";
+					oStatement.setString(15, statusCode);
+					oStatement.setString(16, statusMessage);
+				}
+			}
+
+			//Add Batch process to executed on the database
+			oStatement.addBatch();
+
+			//Execute the Insert
+			oStatement.executeBatch();
+
+			//Close the connection
+			oStatement.close();
+			oConnection.commit();
+			oConnection.close();
+
+			gvTableUpdate = "Table entries created successfully in logging table;";
+
+		} catch (errorObj) {
+			if (oStatement !== null) {
+				oStatement.close();
+			}
+			if (oConnection !== null) {
+				oConnection.close();
+			}
+			gvTableUpdate = "There was a problem inserting entries into the logging table, Error: " + errorObj.message;
+		}
+	}
 	// -------------------------------------------------------- // 
 	// Main function to add entries to the logging table        //
 	// -------------------------------------------------------- //
@@ -679,26 +1013,35 @@
 		} else {
 			//Perform Table Entry to be created in Logging Table
 			try {
-				_createLogEntry();
+				if (gvMethod === "UPDATE" || gvMethod === 'update' || gvMethod === "Update") {
+					var lsJournal = _getOriginalGuid();
+					// 	_updateLogEntry(lsJournal.MESSAGE_GUID);
+					if (lsJournal.MESSAGE_GUID) {
+						_deleteLogEntry(lsJournal.MESSAGE_GUID);
+						_createLogEntryUpdate(lsJournal.MESSAGE_GUID);
+					}
+				} else {
+					_createLogEntry();
+				}
 			} catch (errorObj) {
 				gvTableUpdate = "Error during table insert:" + errorObj.message;
 			}
 			//Delete all entries older than 90 days
 			try {
 				//Logging Table
-				_deleteHistoricEntries();
+				// _deleteHistoricEntries();
 				//Header Table
-				_deleteHistoricEntriesContentTables(gvHeaderTable);
+				// _deleteHistoricEntriesContentTables(gvHeaderTable);
 				//Item Table
-				_deleteHistoricEntriesContentTables(gvItemTable);
+				// _deleteHistoricEntriesContentTables(gvItemTable);
 				//Currency Table
-				_deleteHistoricEntriesContentTables(gvCurrencyTable);
+				// _deleteHistoricEntriesContentTables(gvCurrencyTable);
 			} catch (errorObj) {
 				gvTableUpdate += "Error during deletion of historic entries:" + errorObj.message;
 			}
 			//Save Payload Fields
 			try {
-				_savePayloadFields();
+				// _savePayloadFields();
 			} catch (errorObj) {
 				gvTableUpdate += "Error saving Payload level entries:" + errorObj.message;
 			}

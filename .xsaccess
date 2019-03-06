@@ -39,6 +39,14 @@
            "target": "/CDL_PKG_API/CDL_API_GET_GL_ROUTING.xsjs/$1"
     },
     {
+           "source": "/CDL_PKG_API/CDL_API_POST_GL_ACK_ROUTING/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_POST_GL_ACK_ROUTING.xsjs/$1"
+    },
+         {
+           "source": "/CDL_PKG_API/CDL_API_GET_GL_ACK_ROUTING/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_GL_ACK_ROUTING.xsjs/$1"
+    },
+    {
            "source": "/CDL_PKG_API/CDL_API_POST_NOTIFICATION_ROUTE/(.*)",
            "target": "/CDL_PKG_API/CDL_API_POST_NOTIFICATION_ROUTE.xsjs/$1"
     },
@@ -82,6 +90,14 @@
            "target": "/CDL_PKG_API/CDL_API_GET_PULSE_CONFIG.xsjs/$1"
     },
     {
+           "source": "/CDL_PKG_API/CDL_API_GET_PULSE_SERVICE/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_GET_PULSE_SERVICE.xsjs/$1"
+    },
+        {
+           "source": "/CDL_PKG_API/CDL_API_POST_PULSE_SERVICE/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_POST_PULSE_SERVICE.xsjs/$1"
+    },
+    {
            "source": "/CDL_PKG_API/CDL_API_GET_PULSE_ERROR_CODES/(.*)",
            "target": "/CDL_PKG_API/CDL_API_GET_PULSE_ERROR_CODES.xsjs/$1"
     },
@@ -114,6 +130,10 @@
       {
            "source": "/CDL_PKG_API/CDL_API_SCHEDULE_NOTIFICATIONS/(.*)",
            "target": "/CDL_PKG_API/CDL_API_SCHEDULE_NOTIFICATIONS.xsjs/$1"
+    },
+          {
+           "source": "/CDL_PKG_API/CDL_API_PULSE_SERVICE_ROUTING/(.*)",
+           "target": "/CDL_PKG_API/CDL_API_PULSE_SERVICE_ROUTING.xsjs/$1"
     }],
     "cache_control" : "private, no-cache, no-store, must-revalidate"
 }

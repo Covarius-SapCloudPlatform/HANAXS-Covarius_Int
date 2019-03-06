@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Calculation:scenario xmlns:Calculation="http://www.sap.com/ndb/BiModelCalculation.ecore" id="CDL_CV_GL_ANALYTICS_2" applyPrivilegeType="ANALYTIC_PRIVILEGE" dataCategory="CUBE" schemaVersion="2.3" defaultClient="$$client$$" visibility="reportingEnabled" outputViewType="Aggregation" calculationScenarioType="TREE_BASED" enforceSqlExecution="false">
+<descriptions defaultDescription="Analytics Cube v2"/>
+<localVariables/>
+<variableMappings/>
+<dataSources>
+  <DataSource id="CDL_GL_ITEM" type="DATA_BASE_TABLE">
+    <viewAttributes allViewAttributes="true"/>
+    <columnObject schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM"/>
+  </DataSource>
+</dataSources>
+<calculationViews/>
+<logicalModel id="CDL_GL_ITEM">
+  <attributes>
+    <attribute id="ACCOUNT_TYPE" order="1" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ACCOUNT_TYPE"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="ACCOUNT_TYPE"/>
+    </attribute>
+    <attribute id="ASSIGNMENT_NUMBER" order="2" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ASSIGNMENT_NUMBER"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="ASSIGNMENT_NUMBER"/>
+    </attribute>
+    <attribute id="COMPANY_CODE" order="3" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="COMPANY_CODE"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="COMPANY_CODE"/>
+    </attribute>
+    <attribute id="CUSTOMER" order="4" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="CUSTOMER"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="CUSTOMER"/>
+    </attribute>
+    <attribute id="DOCUMENT_TYPE" order="5" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="DOCUMENT_TYPE"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="DOCUMENT_TYPE"/>
+    </attribute>
+    <attribute id="FISCAL_PERIOD" order="7" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="FISCAL_PERIOD"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="FISCAL_PERIOD"/>
+    </attribute>
+    <attribute id="FISCAL_YEAR" order="8" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="FISCAL_YEAR"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="FISCAL_YEAR"/>
+    </attribute>
+    <attribute id="GL_ACCOUNT" order="9" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="GL_ACCOUNT"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="GL_ACCOUNT"/>
+    </attribute>
+    <attribute id="ITEM_NO" order="10" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ITEM_NO"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="ITEM_NO"/>
+    </attribute>
+    <attribute id="ITEM_TEXT" order="11" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="ITEM_TEXT"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="ITEM_TEXT"/>
+    </attribute>
+    <attribute id="POSTING_DATE" order="12" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="POSTING_DATE"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="POSTING_DATE"/>
+    </attribute>
+    <attribute id="PROFIT_CENTER" order="13" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="PROFIT_CENTER"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="PROFIT_CENTER"/>
+    </attribute>
+    <attribute id="REF_KEY1" order="14" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="REF_KEY1"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="REF_KEY1"/>
+    </attribute>
+    <attribute id="REF_KEY2" order="15" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="REF_KEY2"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="REF_KEY2"/>
+    </attribute>
+    <attribute id="REF_KEY3" order="16" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="REF_KEY3"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="REF_KEY3"/>
+    </attribute>
+    <attribute id="SAP_DOCUMENT" order="17" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="SAP_DOCUMENT"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="SAP_DOCUMENT"/>
+    </attribute>
+    <attribute id="TRADING_PARTNER" order="18" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="TRADING_PARTNER"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="TRADING_PARTNER"/>
+    </attribute>
+    <attribute id="VALUE_DATE" order="19" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="VALUE_DATE"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="VALUE_DATE"/>
+    </attribute>
+    <attribute id="VENDOR" order="20" displayAttribute="false" attributeHierarchyActive="false">
+      <descriptions defaultDescription="VENDOR"/>
+      <keyMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="VENDOR"/>
+    </attribute>
+  </attributes>
+  <calculatedAttributes/>
+  <baseMeasures>
+    <measure id="ENTRY_DATE" order="6" aggregationType="min" measureType="simple">
+      <descriptions defaultDescription="ENTRY_DATE"/>
+      <measureMapping schemaName="CDL_SCH_LOGGING" columnObjectName="CDL_GL_ITEM" columnName="ENTRY_DATE"/>
+    </measure>
+  </baseMeasures>
+  <calculatedMeasures>
+    <measure id="NumEntries" hidden="false" order="21" aggregationType="sum" measureType="simple" calculatedMeasureType="counter" aggregatable="true" datatype="INTEGER">
+      <descriptions defaultDescription="Number of entries"/>
+      <exceptionAggregation>
+        <attribute attributeName="SAP_DOCUMENT"/>
+      </exceptionAggregation>
+      <formula>1</formula>
+    </measure>
+  </calculatedMeasures>
+  <restrictedMeasures/>
+  <localDimensions/>
+</logicalModel>
+<layout>
+  <shapes>
+    <shape expanded="true" modelObjectName="Output" modelObjectNameSpace="MeasureGroup">
+      <upperLeftCorner x="40" y="85"/>
+    </shape>
+  </shapes>
+</layout>
+</Calculation:scenario>

@@ -5,10 +5,9 @@
 	// Author: Jacques Otto                                     //
 	// Company: Covarius                                        //
 	// Date: 2018-09-14                                         //
-	// Description: REST service to be able to create entries   //
-	// in the Pulse Alert Config Table. POST method is allowed  //
-	// you would need to get the x-csrf-token before doing the  //
-	// POST to the service.                                     //
+	// Description: REST service to be able to read entries     //
+	// from the Pulse Alert Configuration Table, as well as post//
+	// for creations/ deletions and updates                     //
 	//----------------------------------------------------------//
 
 	// -------------------------------------------------------- // 
@@ -19,23 +18,101 @@
 		gvStatus;
 	//Variable to carry the conversion errors
 	var gvConvError;
-	//Variables declaring the table details
-	var gvSchemaName = 'CDL_SCH_LOGGING';
-	var gvTableName = 'CDL_PULSE_ALERT_CONFIG';
-
 	//Alert Configuration ID
 	var gvAlertId;
 
+	//Variables declaring the table details
+	var gvSchemaName = 'CDL_SCH_LOGGING';
+	var gvTable = 'CDL_PULSE_ALERT_CONFIG';
+	var gvErrorMessage;
+
 	// -------------------------------------------------------- // 
-	// Component Declarations                                   //
+	// Execute Main Function                                    //
 	// -------------------------------------------------------- //
-	//Check the Method
-	if ($.request.method === $.net.http.GET) {
-		$.response.status = 200;
-		$.response.setBody(JSON.stringify({
-			message: "API Called",
-			result: "GET is not supported, perform a POST to update entry in Pulse Alert Config Table"
-		}));
+	main();
+
+	// -------------------------------------------------------- // 
+	// Main function to call methods as required                //
+	// -------------------------------------------------------- //
+	function main() {
+		//Check the Method
+		if ($.request.method === $.net.http.POST) {
+			//Perform Table Entry to be updated
+			try {
+				_getLastAlertId();
+				_updateEntry();
+			} catch (errorObj) {
+				gvTableUpdate = "Error during table update:" + errorObj.message;
+			}
+
+			$.response.status = 200;
+			$.response.setBody(JSON.stringify({
+				message: "API Called",
+				TableUpdateMessage: gvTableUpdate,
+				Status: gvStatus
+			}));
+		} else if ($.request.method === $.net.http.GET) {
+			//Perform Read to get entries
+			try {
+				_getEntries();
+			} catch (errorObj) {
+				$.response.status = 200;
+				$.response.setBody(JSON.stringify({
+					message: "API Called",
+					result: gvErrorMessage
+				}));
+			}
+		}
+	}
+	// -------------------------------------------------------- // 
+	// Function to read entries from the table 				    //
+	// -------------------------------------------------------- //
+	function _getEntries() {
+		try {
+			//Variable to keep query statement 
+			var lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTable + '"';
+
+			//Connect to the Database and execute the query
+			var oConnection = $.db.getConnection();
+			var oStatement = oConnection.prepareStatement(lvQuery);
+			oStatement.execute();
+			var oResultSet = oStatement.getResultSet();
+			var oResult = {
+				records: []
+			};
+			while (oResultSet.next()) {
+
+				var record = {
+					ID: oResultSet.getString(1),
+					HUB_INTEGRATION: oResultSet.getString(2),
+					ON_OFF: oResultSet.getString(3),
+					ALERT_TYPE: oResultSet.getString(4),
+					ALERT_RETENTION_DAYS: oResultSet.getString(5),
+					PORTAL_NOTIFICATION: oResultSet.getString(6),
+					PORTAL_NOTIFICATION_FREQUENCY: oResultSet.getString(7),
+					HUB_INTEGRATION_API: oResultSet.getString(8)
+				};
+
+				oResult.records.push(record);
+			}
+			oResultSet.close();
+			oStatement.close();
+			oConnection.close();
+
+			//Return the result
+			$.response.contentType = "application/json; charset=UTF-8";
+			$.response.setBody(JSON.stringify(oResult));
+			$.response.status = $.net.http.OK;
+
+		} catch (errorObj) {
+			gvErrorMessage = errorObj.message;
+			if (oStatement !== null) {
+				oStatement.close();
+			}
+			if (oConnection !== null) {
+				oConnection.close();
+			}
+		}
 	}
 
 	// -------------------------------------------------------- // 
@@ -47,7 +124,7 @@
 
 		//Prepare the SQL Statement to read the entries
 		var pstmtSrcKeys = conn.prepareStatement(
-			"SELECT MAX(\"ID\") FROM \"" + gvSchemaName + "\".\"" + gvTableName + "\""
+			"SELECT MAX(\"ID\") FROM \"" + gvSchemaName + "\".\"" + gvTable + "\""
 		);
 
 		//Execute the Query
@@ -83,7 +160,7 @@
 			if (oBody.ID || gvAlertId) {
 				//Build the Statement to update the entries
 				var oStatement = oConnection.prepareStatement(
-					"UPDATE \"" + gvSchemaName + "\".\"" + gvTableName +
+					"UPDATE \"" + gvSchemaName + "\".\"" + gvTable +
 					"\" SET HUB_INTEGRATION = ?, ON_OFF = ?, ALERT_TYPE = ?, ALERT_RETENTION_DAYS = ?, PORTAL_NOTIFICATION = ?, PORTAL_NOTIFICATION_FREQUENCY = ?, HUB_INTEGRATION_API = ? WHERE ID = ?"
 				);
 
@@ -110,7 +187,7 @@
 				}
 			} else {
 				//Build the Statement to insert the entries
-				var oStatement = oConnection.prepareStatement('INSERT INTO "' + gvSchemaName + '"."' + gvTableName +
+				var oStatement = oConnection.prepareStatement('INSERT INTO "' + gvSchemaName + '"."' + gvTable +
 					'" VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
 
 				//Populate the fields with values from the incoming payload
@@ -155,40 +232,5 @@
 			gvStatus = "Error";
 		}
 	}
-
-	// -------------------------------------------------------- // 
-	// Main function to add entries to the logging table        //
-	// -------------------------------------------------------- //
-	function main() {
-
-		//Check the Method
-		if ($.request.method === $.net.http.GET) {
-			$.response.status = 200;
-			$.response.setBody(JSON.stringify({
-				message: "API Called",
-				result: "GET is not supported, perform a POST to update entry in Pulse Alert Config Table"
-			}));
-		} else {
-			//Perform Table Entry to be updated
-			try {
-				_getLastAlertId();
-				_updateEntry();
-			} catch (errorObj) {
-				gvTableUpdate = "Error during table update:" + errorObj.message;
-			}
-
-			$.response.status = 200;
-			$.response.setBody(JSON.stringify({
-				message: "API Called",
-				TableUpdateMessage: gvTableUpdate,
-				Status: gvStatus
-			}));
-		}
-	}
-
-	// -------------------------------------------------------- // 
-	// Execute Main Function                                    //
-	// -------------------------------------------------------- //
-	main();
 
 })();

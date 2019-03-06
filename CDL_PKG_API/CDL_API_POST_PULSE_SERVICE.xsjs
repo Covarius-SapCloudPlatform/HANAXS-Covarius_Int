@@ -4,27 +4,29 @@
 	// -------------------------------------------------------- //
 	// Author: Jacques Otto                                     //
 	// Company: Covarius                                        //
-	// Date: 2018-08-13                                         //
+	// Date: 2018-11-02                                         //
 	// Description: REST service to be able to create entries   //
-	// in the Notification Routing Table. POST method is allowed//
+	// in the Pulse Service Table. POST method is allowed       //
 	// you would need to get the x-csrf-token before doing the  //
-	// POST to the service. method paramter should be passed in //
-	// with either CREATE, DELETE, to indicate if entry is to   //
-	// be created or Deleted.                                   //
+	// POST to the service.                                     //
 	//----------------------------------------------------------//
 
 	// -------------------------------------------------------- // 
 	// Global Variables                                         //
 	// -------------------------------------------------------- //
 	//Variable to carry the table update status
-	var gvTableUpdate;
+	var gvTableUpdate,
+		gvStatus;
 	//Variable to carry the conversion errors
 	var gvConvError;
-	var gvStatus;
 	//Variables declaring the table details
 	var gvSchemaName = 'CDL_SCH_LOGGING';
-	var gvTableName = 'CDL_NOTIFICATION_ROUTING';
-	//For Delete a method parameter with a value of 'DELETE' is passed in
+	var gvTableName = 'CDL_PULSE_SERVICE';
+
+	//ID
+	var gvId;
+
+	//Indicate if Service is to be updated or Deleted
 	var gvFunction = $.request.parameters.get('method');
 
 	// -------------------------------------------------------- // 
@@ -35,13 +37,45 @@
 		$.response.status = 200;
 		$.response.setBody(JSON.stringify({
 			message: "API Called",
-			result: "GET is not supported, perform a POST to add GL Routing Entry"
+			result: "GET is not supported, perform a POST to update entry in Pulse Service Table"
 		}));
 	}
+
+	// -------------------------------------------------------- // 
+	// Function to get the latest ID                            //
+	// -------------------------------------------------------- //
+	function _getLastId() {
+		//Get the Connection to the Database
+		var conn = $.db.getConnection();
+
+		//Prepare the SQL Statement to read the entries
+		var pstmtSrcKeys = conn.prepareStatement(
+			"SELECT MAX(\"SERVICE_ID\") FROM \"" + gvSchemaName + "\".\"" + gvTableName + "\""
+		);
+
+		//Execute the Query
+		var rs = pstmtSrcKeys.executeQuery();
+
+		//Map and Save the results
+		while (rs.next()) {
+			gvId = rs.getString(1);
+			gvId = parseInt(gvId);
+		}
+		if (gvId) {
+			gvId = gvId + 1;
+		} else {
+			gvId = parseInt(1);
+		}
+
+		//Close the DB Connection
+		pstmtSrcKeys.close();
+		conn.close();
+	}
+
 	// ----------------------------------------------------------------// 
-	// Function to insert entries into the table for routing address   //
+	// Function to insert entries into the table                       //
 	// ----------------------------------------------------------------//
-	function _createRoutingEntry() {
+	function _createEntry() {
 		try {
 			//Get the Request Body
 			var oBody = JSON.parse($.request.body.asString());
@@ -54,14 +88,14 @@
 				'" VALUES (?, ?, ?, ?)');
 
 			//Populate the fields with values from the incoming payload
-			//CompanyCode
-			oStatement.setString(1, oBody.COMPANY_CODE);
-			//OData URL
-			oStatement.setString(2, oBody.ODATA_URL);
-			//System
-			oStatement.setString(3, oBody.SYSTEM);
-			//Client
-			oStatement.setString(4, oBody.CLIENT);
+			//Service ID
+			oStatement.setInt(1, gvId);
+			//Service Name
+			oStatement.setString(2, oBody.SERVICE_NAME);
+			//Virtual Translation
+			oStatement.setString(3, oBody.VIRTUAL_TRANSLATION.toString());
+			//Aggregation
+			oStatement.setString(4, oBody.AGGREGATION.toString());
 
 			//Add Batch process to executed on the database
 			oStatement.addBatch();
@@ -74,7 +108,7 @@
 			oConnection.commit();
 			oConnection.close();
 
-			gvTableUpdate = "Table entries created successfully in Notification Routing Table;";
+			gvTableUpdate = "Table entries created successfully in Pulse Service Table;";
 			gvStatus = "Success";
 		} catch (errorObj) {
 			if (oStatement !== null) {
@@ -83,54 +117,12 @@
 			if (oConnection !== null) {
 				oConnection.close();
 			}
-			gvTableUpdate = "There was a problem inserting entries into the Notification Routing Table, Error: " + errorObj.message;
-			gvStatus = "Error";
+			gvTableUpdate = "There was a problem inserting entries into the Pulse Service Table, Error: " + errorObj.message;
 		}
 	}
 
 	// ----------------------------------------------------------------// 
-	// Function to delete entry from the table for routing address     //
-	// ----------------------------------------------------------------//
-	function _deleteRoutingEntry() {
-		try {
-			//Get the Request Body
-			var oBody = JSON.parse($.request.body.asString());
-
-			//Get the Database connection
-			var oConnection = $.db.getConnection();
-
-			//Build the Statement to delete the entries
-			var oStatement = oConnection.prepareStatement("DELETE FROM \"" + gvSchemaName + "\".\"" + gvTableName + "\" WHERE COMPANY_CODE = ?");
-
-			//Start Time
-			oStatement.setString(1, oBody.COMPANY_CODE);
-
-			oStatement.addBatch();
-
-			//Execute the Insert
-			oStatement.executeBatch();
-
-			//Close the connection
-			oStatement.close();
-			oConnection.commit();
-			oConnection.close();
-
-			gvTableUpdate = "Table entry deleted from Notification Routing Table;";
-			gvStatus = "Success";
-		} catch (errorObj) {
-			if (oStatement !== null) {
-				oStatement.close();
-			}
-			if (oConnection !== null) {
-				oConnection.close();
-			}
-			gvTableUpdate = "There was a problem deleting entry in the Notification Routing Table, Error: " + errorObj.message;
-			gvStatus = "Error";
-		}
-	}
-
-	// ----------------------------------------------------------------// 
-	// Function to update entry                                        //
+	// Function to insert entries into the table                       //
 	// ----------------------------------------------------------------//
 	function _updateEntry() {
 		try {
@@ -139,23 +131,95 @@
 
 			//Get the Database connection
 			var oConnection = $.db.getConnection();
-			var oStatement;
 
 			//Build the Statement to update the entries
 			var oStatement = oConnection.prepareStatement(
 				"UPDATE \"" + gvSchemaName + "\".\"" + gvTableName +
-				"\" SET SYSTEM = ?, CLIENT = ?, ODATA_URL = ? WHERE COMPANY_CODE = ?"
-			);
+				"\" SET VIRTUAL_TRANSLATION = ?, AGGREGATION = ? WHERE SERVICE_ID = ?");
 
 			//Populate the fields with values from the incoming payload
-			//System
-			oStatement.setString(1, oBody.SYSTEM);
-			//Client
-			oStatement.setString(2, oBody.CLIENT);
-			//Target ODATA Url
-			oStatement.setString(3, oBody.ODATA_URL);
-			//Company Code
-			oStatement.setString(4, oBody.COMPANY_CODE);
+			//Virtual Translation
+			oStatement.setString(1, oBody.VIRTUAL_TRANSLATION.toString());
+			//Aggregation
+			oStatement.setString(2, oBody.AGGREGATION.toString());
+			//ID
+			oStatement.setInt(3, parseFloat(oBody.SERVICE_ID));
+
+			//Add Batch process to executed on the database
+			oStatement.addBatch();
+
+			//Execute the Insert
+			oStatement.executeBatch();
+
+			//Close the connection
+			oStatement.close();
+			oConnection.commit();
+			oConnection.close();
+
+			gvTableUpdate = "Table entries updated successfully in Service Table;";
+			gvStatus = "Success";
+		} catch (errorObj) {
+			if (oStatement !== null) {
+				oStatement.close();
+			}
+			if (oConnection !== null) {
+				oConnection.close();
+			}
+			gvTableUpdate = "There was a problem updating entries in the Pulse Service Table, Error: " + errorObj.message;
+			gvStatus = "Error";
+		}
+	}
+
+	//-----------------------------------------------------------------//
+	// Function to check if the service name already exists in the tab //
+	//-----------------------------------------------------------------//
+	function _checkEntry() {
+		var lvExist;
+		//Get the Request Body
+		var oBody = JSON.parse($.request.body.asString());
+
+		//Get the Connection to the Database
+		var conn = $.db.getConnection();
+
+		var lvQuery = 'SELECT * FROM "' + gvSchemaName + '"."' + gvTableName + '"' + ' WHERE SERVICE_NAME =' + "'" + oBody.SERVICE_NAME + "'";
+
+		//Prepare the SQL Statement to read the entries
+		var pstmtSrcKeys = conn.prepareStatement(lvQuery);
+
+		//Execute the Query
+		var rs = pstmtSrcKeys.executeQuery();
+
+		//Map and Save the results
+		while (rs.next()) {
+			lvExist = true;
+		}
+
+		//Close the DB Connection
+		pstmtSrcKeys.close();
+		conn.close();
+
+		gvTableUpdate = "Table entry for this Service Already Exists";
+		gvStatus = "Duplicate";
+		return lvExist;
+
+	}
+
+	// ----------------------------------------------------------------// 
+	// Function to delete entry from the table for routing address     //
+	// ----------------------------------------------------------------//
+	function _deleteEntry() {
+		try {
+			//Get the Request Body
+			var oBody = JSON.parse($.request.body.asString());
+
+			//Get the Database connection
+			var oConnection = $.db.getConnection();
+
+			//Build the Statement to delete the entries
+			var oStatement = oConnection.prepareStatement("DELETE FROM \"" + gvSchemaName + "\".\"" + gvTableName + "\" WHERE SERVICE_ID = ?");
+
+			//ID
+			oStatement.setInt(1, parseInt(oBody.SERVICE_ID));
 
 			oStatement.addBatch();
 
@@ -167,8 +231,8 @@
 			oConnection.commit();
 			oConnection.close();
 
-			gvTableUpdate = "Table entries updated successfully in Pulse Service Route Table;";
-			gvStatus = "Success";
+			gvTableUpdate = "Table entry deleted from Pulse Service Table;";
+
 		} catch (errorObj) {
 			if (oStatement !== null) {
 				oStatement.close();
@@ -176,12 +240,12 @@
 			if (oConnection !== null) {
 				oConnection.close();
 			}
-			gvTableUpdate = "There was a problem updating entries in the Pulse Service Route Table, Error: " + errorObj.message;
-			gvStatus = "Error";
+			gvTableUpdate = "There was a problem deleting entry in the Pulse Service Table, Error: " + errorObj.message;
 		}
 	}
+
 	// -------------------------------------------------------- // 
-	// Main function to add entries to the logging table        //
+	// Main function to add entries to the table                //
 	// -------------------------------------------------------- //
 	function main() {
 
@@ -190,35 +254,34 @@
 			$.response.status = 200;
 			$.response.setBody(JSON.stringify({
 				message: "API Called",
-				result: "GET is not supported, perform a POST to add Notification Routing Entries"
+				result: "GET is not supported, perform a POST to update entry in Pulse Service Table"
 			}));
 		} else {
 			if (gvFunction === "DELETE") {
 				//Perform Table Entry to be deleted from GL Routing Table
 				try {
-					_deleteRoutingEntry();
+					_deleteEntry();
 				} catch (errorObj) {
 					gvTableUpdate = "Error during table entry deletion:" + errorObj.message;
 				}
 			} else if (gvFunction === "UPDATE") {
+				_updateEntry();
+			} else {
+				//Perform Table Entry to be updated
 				try {
-					_updateEntry();
+					_getLastId();
+					var lvExist = _checkEntry();
+					if (!lvExist) {
+						_createEntry();
+					}
 				} catch (errorObj) {
 					gvTableUpdate = "Error during table update:" + errorObj.message;
 				}
-			} else {
-				//Perform Table Entry to be created in GL Routing Table
-				try {
-					_createRoutingEntry();
-				} catch (errorObj) {
-					gvTableUpdate = "Error during table insert:" + errorObj.message;
-				}
 			}
-
 			$.response.status = 200;
 			$.response.setBody(JSON.stringify({
 				message: "API Called",
-				TableUpdateStatus: gvTableUpdate,
+				TableUpdateMessage: gvTableUpdate,
 				Status: gvStatus
 			}));
 		}

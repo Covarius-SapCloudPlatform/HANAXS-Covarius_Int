@@ -60,7 +60,13 @@
 			gvPostingStatuses = gvPostingStatus.split(',');
 		}
 	}
-
+    
+    //Check if first character of sapDocument is a 0, then remove it
+    if (gvSapDocument) {
+        if(gvSapDocument.substring(0,1) === "0") {
+            gvSapDocument = gvSapDocument.substring("1");
+        }
+    }
 	// -------------------------------------------------------- // 
 	// Component Declarations                                   //
 	// -------------------------------------------------------- //

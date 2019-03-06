@@ -26,6 +26,9 @@
 	//Alert Configuration ID
 	var gvId;
 
+	//Indicate if Hub or GLBridge Ack API is to be updated
+	var gvFunction = $.request.parameters.get('method');
+
 	// -------------------------------------------------------- // 
 	// Component Declarations                                   //
 	// -------------------------------------------------------- //
@@ -75,32 +78,66 @@
 			//Get the Database connection
 			var oConnection = $.db.getConnection();
 
-			if (oBody.ID || gvId) {
-				//Build the Statement to update the entries
-				var oStatement = oConnection.prepareStatement(
-					"UPDATE \"" + gvSchemaName + "\".\"" + gvTableName +
-					"\" SET HUB_INTEGRATION_API = ? WHERE ID = ?");
+			if (gvFunction === "HUB" || gvFunction === "" || gvFunction == null) {
+				if (oBody.ID || gvId) {
+					//Build the Statement to update the entries
+					var oStatement = oConnection.prepareStatement(
+						"UPDATE \"" + gvSchemaName + "\".\"" + gvTableName +
+						"\" SET HUB_INTEGRATION_API = ? WHERE ID = ?");
 
-				//Populate the fields with values from the incoming payload
-				//Hub Integration API
-				oStatement.setString(1, oBody.HUB_INTEGRATION_API);
+					//Populate the fields with values from the incoming payload
+					//Hub Integration API
+					oStatement.setString(1, oBody.HUB_INTEGRATION_API);
 
-				//ID
-				if (oBody.ID) {
-					oStatement.setInt(2, parseFloat(oBody.ID));
+					//ID
+					if (oBody.ID) {
+						oStatement.setInt(2, parseFloat(oBody.ID));
+					} else {
+						oStatement.setInt(2, parseFloat(gvId));
+					}
 				} else {
-					oStatement.setInt(2, parseFloat(gvId));
-				}
-			} else {
-				//Build the Statement to insert the entries
-				var oStatement = oConnection.prepareStatement('INSERT INTO "' + gvSchemaName + '"."' + gvTableName +
-					'" VALUES (?, ?)');
+					//Build the Statement to insert the entries
+					var oStatement = oConnection.prepareStatement('INSERT INTO "' + gvSchemaName + '"."' + gvTableName +
+						'" VALUES (?, ?, ?)');
 
-				//Populate the fields with values from the incoming payload
-				//ID
-				oStatement.setInt(1, 1);
-				//Hub Integration API
-				oStatement.setString(2, oBody.HUB_INTEGRATION_API);
+					//Populate the fields with values from the incoming payload
+					//ID
+					oStatement.setInt(1, 1);
+					//Hub Integration API
+					oStatement.setString(2, oBody.HUB_INTEGRATION_API);
+					//GL Ack API
+					oStatement.setString(3, "");
+				}
+			} else if (gvFunction === "GL_ACK") {
+				if (oBody.ID || gvId) {
+					//Build the Statement to update the entries
+					var oStatement = oConnection.prepareStatement(
+						"UPDATE \"" + gvSchemaName + "\".\"" + gvTableName +
+						"\" SET GL_BRIDGE_ACK_API = ? WHERE ID = ?");
+
+					//Populate the fields with values from the incoming payload
+					//Hub Integration API
+					oStatement.setString(1, oBody.GL_BRIDGE_ACK_API);
+
+					//ID
+					if (oBody.ID) {
+						oStatement.setInt(2, parseFloat(oBody.ID));
+					} else {
+						oStatement.setInt(2, parseFloat(gvId));
+					}
+				} else {
+					//Build the Statement to insert the entries
+					var oStatement = oConnection.prepareStatement('INSERT INTO "' + gvSchemaName + '"."' + gvTableName +
+						'" VALUES (?, ?, ?)');
+
+					//Populate the fields with values from the incoming payload
+					//ID
+					oStatement.setInt(1, 1);
+					//Hub Integration API
+					oStatement.setString(2, oBody.GL_BRIDGE_ACK_API);
+					//GL Ack API
+					oStatement.setString(3, "");
+				}
 			}
 			//Add Batch process to executed on the database
 			oStatement.addBatch();

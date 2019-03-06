@@ -4,9 +4,9 @@
 	// -------------------------------------------------------- //
 	// Author: Jacques Otto                                     //
 	// Company: Covarius                                        //
-	// Date: 2018-09-14                                         //
+	// Date: 2018-11-02                                         //
 	// Description: REST service to be able to read entries     //
-	// from the Pulse Alert Configuration Table.                //
+	// from the Pulse Service Table.                            //
 	//----------------------------------------------------------//
 
 	// -------------------------------------------------------- // 
@@ -14,7 +14,7 @@
 	// -------------------------------------------------------- //
 	//Variables declaring the table details
 	var gvSchemaName = 'CDL_SCH_LOGGING';
-	var gvTable = 'CDL_PULSE_ALERT_CONFIG';
+	var gvTable = 'CDL_PULSE_SERVICE';
 	var gvErrorMessage;
 
 	// -------------------------------------------------------- // 
@@ -47,14 +47,10 @@
 			while (oResultSet.next()) {
 
 				var record = {
-					ID: oResultSet.getString(1),
-					HUB_INTEGRATION: oResultSet.getString(2),
-					ON_OFF: oResultSet.getString(3),
-					ALERT_TYPE: oResultSet.getString(4),
-					ALERT_RETENTION_DAYS: oResultSet.getString(5),
-					PORTAL_NOTIFICATION: oResultSet.getString(6),
-					PORTAL_NOTIFICATION_FREQUENCY: oResultSet.getString(7),
-					HUB_INTEGRATION_API: oResultSet.getString(8)
+					SERVICE_ID: oResultSet.getString(1),
+					SERVICE_NAME: oResultSet.getString(2),
+					VIRTUAL_TRANSLATION: oResultSet.getString(3),
+					AGGREGATION: oResultSet.getString(4)
 				};
 
 				oResult.records.push(record);

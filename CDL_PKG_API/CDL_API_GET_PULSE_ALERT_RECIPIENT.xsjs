@@ -61,9 +61,11 @@
 					ALERT_TYPE: oResultSet.getString(3),
 					INTERFACE: oResultSet.getString(4),
 					EMAIL_HEADER: oResultSet.getString(5),
-					DATA_ERROR_ALERT: oResultSet.getString(6),
-					SAP_RESPONSE_ALERT: oResultSet.getString(7),
-					SAP_DELIVERY_ALERT: oResultSet.getString(8)
+					FREQUENCY: oResultSet.getString(6),
+					FREQUENCY_VALUE: oResultSet.getString(7),
+					DATA_ERROR_ALERT: oResultSet.getString(8),
+					SAP_RESPONSE_ALERT: oResultSet.getString(9),
+					SAP_DELIVERY_ALERT: oResultSet.getString(10)
 				};
 
 				oResult.records.push(record);

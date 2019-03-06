@@ -4,7 +4,12 @@
     "schedules": [
  {
           "description": "Job to Send Pulse Alerts 1 Time per day",
-          "xscron": "* * * * 17 0 0"
+          "xscron": "* * * * 17 0 0",
+                    "parameter": {
+             "recipientEmail": "test@gmail.com",
+             "frequency": "Daily",
+             "frequencyValue": "3"
+             }
        }
     ]
 }
